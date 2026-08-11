@@ -6,9 +6,11 @@ import '../../../../core/providers/booking_provider.dart';
 import '../../../../core/providers/dashboard_provider.dart';
 import '../../../../core/providers/invoice_provider.dart';
 import '../../../../core/utils/date_utils.dart';
+import '../../../../core/widgets/app_overlays.dart';
 import '../../../../core/widgets/booking_card.dart';
 import '../../../../core/widgets/loading_view.dart';
 import '../../../../core/widgets/segmented_tabs.dart';
+import '../../../../l10n/app_strings.dart';
 import '../../../../models/booking_model.dart';
 import '../../../../repositories/booking_repository.dart';
 
@@ -21,14 +23,12 @@ class OwnerBookingsScreen extends ConsumerStatefulWidget {
 
 class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
   int _tabIndex = 0;
-  static const _tabs = ['Today', 'Upcoming', 'Completed', 'Cancelled'];
-  static const _statusMap = [null, null, 'completed', 'cancelled'];
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final today = AppDateUtils.toApiDate(DateTime.now());
-    final status = _statusMap[_tabIndex];
+    final s = AppStrings.of(context);
+    final tabs = [s.tabToday, s.tabUpcoming, s.tabCompleted, s.tabCancelled];
 
     final bookingsAsync = ref.watch(
       ownerBookingsProvider((
@@ -36,16 +36,14 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
             ? 'completed'
             : _tabIndex == 3
                 ? 'cancelled'
-                : _tabIndex == 1
-                    ? null
-                    : null,
+                : null,
         date: _tabIndex == 0 ? today : null,
       )),
     );
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Booking Management'),
+        title: Text(s.bookingManagement),
         automaticallyImplyLeading: false,
         actions: [
           IconButton(
@@ -57,9 +55,9 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: SegmentedTabs(
-              tabs: _tabs,
+              tabs: tabs,
               selectedIndex: _tabIndex,
               onChanged: (i) => setState(() => _tabIndex = i),
             ),
@@ -84,14 +82,14 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                       .toList();
                 }
                 if (filtered.isEmpty) {
-                  return const Center(child: Text('No bookings found'));
+                  return Center(child: Text(s.noBookingsFound));
                 }
                 return RefreshIndicator(
                   onRefresh: () async => ref.invalidate(ownerBookingsProvider),
                   child: ListView.separated(
                     padding: const EdgeInsets.all(16),
                     itemCount: filtered.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    separatorBuilder: (_, _) => const SizedBox(height: 12),
                     itemBuilder: (context, index) {
                       final booking = filtered[index];
                       return BookingCard(
@@ -101,27 +99,27 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                                 booking.status == 'cancelled'
                             ? null
                             : PopupMenuButton<String>(
-                                onSelected: (s) => _updateStatus(booking.id, s),
+                                onSelected: (value) => _updateStatus(booking.id, value),
                                 itemBuilder: (_) {
                                   final items = <PopupMenuItem<String>>[];
                                   switch (booking.status) {
                                     case 'pending':
-                                      items.addAll(const [
-                                        PopupMenuItem(value: 'confirmed', child: Text('Confirm')),
-                                        PopupMenuItem(value: 'in_progress', child: Text('In Progress')),
-                                        PopupMenuItem(value: 'completed', child: Text('Complete')),
-                                        PopupMenuItem(value: 'cancelled', child: Text('Cancel')),
+                                      items.addAll([
+                                        PopupMenuItem(value: 'confirmed', child: Text(s.confirm)),
+                                        PopupMenuItem(value: 'in_progress', child: Text(s.bookingStatus('in_progress'))),
+                                        PopupMenuItem(value: 'completed', child: Text(s.complete)),
+                                        PopupMenuItem(value: 'cancelled', child: Text(s.cancel)),
                                       ]);
                                     case 'confirmed':
-                                      items.addAll(const [
-                                        PopupMenuItem(value: 'in_progress', child: Text('In Progress')),
-                                        PopupMenuItem(value: 'completed', child: Text('Complete')),
-                                        PopupMenuItem(value: 'cancelled', child: Text('Cancel')),
+                                      items.addAll([
+                                        PopupMenuItem(value: 'in_progress', child: Text(s.bookingStatus('in_progress'))),
+                                        PopupMenuItem(value: 'completed', child: Text(s.complete)),
+                                        PopupMenuItem(value: 'cancelled', child: Text(s.cancel)),
                                       ]);
                                     case 'in_progress':
-                                      items.addAll(const [
-                                        PopupMenuItem(value: 'completed', child: Text('Complete')),
-                                        PopupMenuItem(value: 'cancelled', child: Text('Cancel')),
+                                      items.addAll([
+                                        PopupMenuItem(value: 'completed', child: Text(s.complete)),
+                                        PopupMenuItem(value: 'cancelled', child: Text(s.cancel)),
                                       ]);
                                   }
                                   return items;
@@ -140,25 +138,26 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
   }
 
   void _showStatusSheet(BuildContext context, BookingModel booking) {
+    final s = AppStrings.of(context);
     final actions = <({String value, String label})>[];
     switch (booking.status) {
       case 'pending':
-        actions.addAll(const [
-          (value: 'confirmed', label: 'Mark Confirmed'),
-          (value: 'in_progress', label: 'Mark In Progress'),
-          (value: 'completed', label: 'Mark Completed'),
-          (value: 'cancelled', label: 'Cancel'),
+        actions.addAll([
+          (value: 'confirmed', label: s.markConfirmed),
+          (value: 'in_progress', label: s.markInProgress),
+          (value: 'completed', label: s.markCompleted),
+          (value: 'cancelled', label: s.cancel),
         ]);
       case 'confirmed':
-        actions.addAll(const [
-          (value: 'in_progress', label: 'Mark In Progress'),
-          (value: 'completed', label: 'Mark Completed'),
-          (value: 'cancelled', label: 'Cancel'),
+        actions.addAll([
+          (value: 'in_progress', label: s.markInProgress),
+          (value: 'completed', label: s.markCompleted),
+          (value: 'cancelled', label: s.cancel),
         ]);
       case 'in_progress':
-        actions.addAll(const [
-          (value: 'completed', label: 'Mark Completed'),
-          (value: 'cancelled', label: 'Cancel'),
+        actions.addAll([
+          (value: 'completed', label: s.markCompleted),
+          (value: 'cancelled', label: s.cancel),
         ]);
       default:
         break;
@@ -166,32 +165,37 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
 
     if (actions.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No further status changes for ${booking.status}')),
+        SnackBar(content: Text(s.noFurtherStatusChanges)),
       );
       return;
     }
 
-    showModalBottomSheet(
+    showAppModalBottomSheet(
       context: context,
+      showDragHandle: true,
       builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (final action in actions)
-              ListTile(
-                title: Text(action.label),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _updateStatus(booking.id, action.value);
-                },
-              ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (final action in actions)
+                ListTile(
+                  title: Text(action.label),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _updateStatus(booking.id, action.value);
+                  },
+                ),
+            ],
+          ),
         ),
       ),
     );
   }
 
   Future<void> _updateStatus(int id, String status) async {
+    final s = AppStrings.of(context);
     try {
       await ref.read(bookingRepositoryProvider).updateStatus(id, status);
       ref.invalidate(ownerBookingsProvider);
@@ -199,7 +203,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
       ref.invalidate(invoicesProvider);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Status updated to $status')),
+          SnackBar(content: Text('${s.statusUpdated}: ${s.bookingStatus(status)}')),
         );
       }
     } catch (e) {

@@ -5,11 +5,13 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/providers/auth_provider.dart';
 import '../../../../core/providers/dashboard_provider.dart';
 import '../../../../core/providers/garage_provider.dart';
+import '../../../../core/widgets/app_bottom_nav_bar.dart';
 import '../../../../core/widgets/booking_card.dart';
 import '../../../../core/widgets/loading_view.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/widgets/metric_card.dart';
 import '../../../../core/widgets/quick_action_button.dart';
+import '../../../../l10n/app_strings.dart';
 
 class OwnerDashboardScreen extends ConsumerWidget {
   const OwnerDashboardScreen({super.key});
@@ -20,9 +22,11 @@ class OwnerDashboardScreen extends ConsumerWidget {
     final metricsAsync = ref.watch(dashboardMetricsProvider);
     final garageAsync = ref.watch(myGarageProvider);
     final theme = Theme.of(context);
+    final s = AppStrings.of(context);
 
     return Scaffold(
       body: SafeArea(
+        bottom: false,
         child: RefreshIndicator(
           onRefresh: () async {
             ref.invalidate(dashboardMetricsProvider);
@@ -46,14 +50,14 @@ class OwnerDashboardScreen extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Good Morning, ${user?.name ?? 'Owner'}',
+                              s.greeting(user?.name ?? ''),
                               style: theme.textTheme.headlineMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: theme.colorScheme.primary,
                               ),
                             ),
                             Text(
-                              'Manage your services today',
+                              s.manageServicesToday,
                               style: theme.textTheme.labelSmall?.copyWith(
                                 color: theme.colorScheme.onSurfaceVariant,
                               ),
@@ -78,12 +82,12 @@ class OwnerDashboardScreen extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           Text(
-                            'No garage yet',
+                            s.noGarageYet,
                             style: theme.textTheme.headlineMedium,
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Create your garage so customers can book services.',
+                            s.createGarageSoCustomersCanBook,
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
@@ -92,11 +96,11 @@ class OwnerDashboardScreen extends ConsumerWidget {
                           ElevatedButton.icon(
                             onPressed: () => context.go('/owner/setup'),
                             icon: const Icon(Icons.add_business),
-                            label: const Text('Create Garage'),
+                            label: Text(s.createGarage),
                           ),
                           TextButton(
                             onPressed: () => context.go('/owner/settings'),
-                            child: const Text('Or set up in Settings'),
+                            child: Text(s.orSetupInSettings),
                           ),
                         ],
                       ),
@@ -125,26 +129,26 @@ class OwnerDashboardScreen extends ConsumerWidget {
                         children: [
                           MetricCard(
                             icon: Icons.calendar_today,
-                            label: 'Today Bookings',
+                            label: s.todayBookings,
                             value: '${metrics.todayBookings}',
                           ),
                           MetricCard(
                             icon: Icons.pending_actions,
-                            label: 'Pending Bookings',
+                            label: s.pendingBookings,
                             value: '${metrics.pendingBookings}',
                             iconColor: theme.colorScheme.tertiary,
                             valueColor: theme.colorScheme.tertiary,
                           ),
                           MetricCard(
                             icon: Icons.event,
-                            label: 'Upcoming Bookings',
+                            label: s.upcomingBookings,
                             value: '${metrics.upcomingBookings}',
                             iconColor: theme.colorScheme.secondary,
                             valueColor: theme.colorScheme.secondary,
                           ),
                           MetricCard(
                             icon: Icons.payments,
-                            label: "Today's Revenue",
+                            label: s.todaysRevenue,
                             value: '₹${metrics.todayRevenue}',
                             valueColor: theme.colorScheme.primaryContainer,
                           ),
@@ -153,37 +157,37 @@ class OwnerDashboardScreen extends ConsumerWidget {
                     ),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Text('Quick Actions', style: theme.textTheme.headlineMedium),
+                      child: Text(s.quickActions, style: theme.textTheme.headlineMedium),
                     ),
                     const SizedBox(height: 16),
                     SizedBox(
-                      height: 100,
+                      height: 108,
                       child: ListView(
                         scrollDirection: Axis.horizontal,
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         children: [
                           QuickActionButton(
                             icon: Icons.add_box,
-                            label: 'Add Booking',
+                            label: s.addBooking,
                             filled: true,
                             onTap: () => context.push('/owner/bookings/add'),
                           ),
                           const SizedBox(width: 16),
                           QuickActionButton(
                             icon: Icons.list_alt,
-                            label: 'View Bookings',
+                            label: s.viewBookings,
                             onTap: () => context.go('/owner/bookings'),
                           ),
                           const SizedBox(width: 16),
                           QuickActionButton(
                             icon: Icons.groups,
-                            label: 'Customers',
+                            label: s.customers,
                             onTap: () => context.go('/owner/customers'),
                           ),
                           const SizedBox(width: 16),
                           QuickActionButton(
                             icon: Icons.receipt_long,
-                            label: 'Billing',
+                            label: s.billing,
                             onTap: () => context.go('/owner/billing'),
                           ),
                         ],
@@ -201,7 +205,7 @@ class OwnerDashboardScreen extends ConsumerWidget {
                               children: [
                                 Expanded(
                                   child: Text(
-                                    'Weekly Revenue',
+                                    s.weeklyRevenue,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: theme.textTheme.titleLarge,
@@ -268,7 +272,7 @@ class OwnerDashboardScreen extends ConsumerWidget {
                         children: [
                           Expanded(
                             child: Text(
-                              'Recent Bookings',
+                              s.recentBookings,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: theme.textTheme.headlineMedium,
@@ -276,7 +280,7 @@ class OwnerDashboardScreen extends ConsumerWidget {
                           ),
                           TextButton(
                             onPressed: () => context.go('/owner/bookings'),
-                            child: const Text('View All'),
+                            child: Text(s.viewAll),
                           ),
                         ],
                       ),
@@ -287,7 +291,7 @@ class OwnerDashboardScreen extends ConsumerWidget {
                         child: BookingCard(booking: b),
                       ),
                     ),
-                    const SizedBox(height: 100),
+                    SizedBox(height: AppBottomNavBar.contentBottomPadding(context)),
                   ]),
                 ),
               ),

@@ -5,6 +5,7 @@ class AppConstants {
   static const String refreshTokenKey = 'refresh_token';
   static const String userKey = 'user_json';
   static const String themeModeKey = 'theme_mode';
+  static const String localeKey = 'app_locale';
 
   static const List<String> serviceTypes = [
     'general_service',

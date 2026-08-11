@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-class OwnerShell extends StatelessWidget {
+import '../core/widgets/app_bottom_nav_bar.dart';
+import '../l10n/app_strings.dart';
+
+class OwnerShell extends ConsumerWidget {
   const OwnerShell({super.key, required this.child, required this.location});
 
   final Widget child;
@@ -32,8 +36,11 @@ class OwnerShell extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final s = AppStrings.of(context);
     final onHomeTab = _isMainTab && _index == 0;
+    final media = MediaQuery.of(context);
+    final keyboardOpen = media.viewInsets.bottom > 80;
 
     return PopScope(
       canPop: onHomeTab,
@@ -54,39 +61,74 @@ class OwnerShell extends StatelessWidget {
         }
       },
       child: Scaffold(
-        body: child,
-        bottomNavigationBar: _hideNav
-            ? null
-            : NavigationBar(
-                selectedIndex: _index.clamp(0, 4),
-                onDestinationSelected: (index) {
-                  switch (index) {
-                    case 0:
-                      context.go('/owner');
-                    case 1:
-                      context.go('/owner/bookings');
-                    case 2:
-                      context.go('/owner/customers');
-                    case 3:
-                      context.go('/owner/billing');
-                    case 4:
-                      context.go('/owner/settings');
-                  }
-                },
-                destinations: const [
-                  NavigationDestination(icon: Icon(Icons.dashboard), label: 'Dashboard'),
-                  NavigationDestination(icon: Icon(Icons.list_alt), label: 'Bookings'),
-                  NavigationDestination(icon: Icon(Icons.groups), label: 'Customers'),
-                  NavigationDestination(icon: Icon(Icons.receipt_long), label: 'Billing'),
-                  NavigationDestination(icon: Icon(Icons.settings), label: 'Settings'),
-                ],
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        resizeToAvoidBottomInset: false,
+        body: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Zero bottom padding so SafeArea does NOT paint a full-width color band.
+            MediaQuery(
+              data: media.copyWith(
+                padding: media.padding.copyWith(bottom: 0),
               ),
+              child: child,
+            ),
+            if (!_hideNav && !keyboardOpen)
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: AppBottomNavBar(
+                  selectedIndex: _index.clamp(0, 4),
+                  onSelected: (index) {
+                    switch (index) {
+                      case 0:
+                        context.go('/owner');
+                      case 1:
+                        context.go('/owner/bookings');
+                      case 2:
+                        context.go('/owner/customers');
+                      case 3:
+                        context.go('/owner/billing');
+                      case 4:
+                        context.go('/owner/settings');
+                    }
+                  },
+                  items: [
+                    AppBottomNavItem(
+                      icon: Icons.dashboard_outlined,
+                      selectedIcon: Icons.dashboard_rounded,
+                      label: s.dashboard,
+                    ),
+                    AppBottomNavItem(
+                      icon: Icons.list_alt_outlined,
+                      selectedIcon: Icons.list_alt_rounded,
+                      label: s.bookings,
+                    ),
+                    AppBottomNavItem(
+                      icon: Icons.groups_outlined,
+                      selectedIcon: Icons.groups_rounded,
+                      label: s.customers,
+                    ),
+                    AppBottomNavItem(
+                      icon: Icons.receipt_long_outlined,
+                      selectedIcon: Icons.receipt_long_rounded,
+                      label: s.billing,
+                    ),
+                    AppBottomNavItem(
+                      icon: Icons.settings_outlined,
+                      selectedIcon: Icons.settings_rounded,
+                      label: s.settings,
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
 }
 
-class CustomerShell extends StatelessWidget {
+class CustomerShell extends ConsumerWidget {
   const CustomerShell({super.key, required this.child, required this.location});
 
   final Widget child;
@@ -110,8 +152,11 @@ class CustomerShell extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final s = AppStrings.of(context);
     final onHomeTab = _isMainTab && _index == 0;
+    final media = MediaQuery.of(context);
+    final keyboardOpen = media.viewInsets.bottom > 80;
 
     return PopScope(
       canPop: onHomeTab,
@@ -126,30 +171,60 @@ class CustomerShell extends StatelessWidget {
         }
       },
       child: Scaffold(
-        body: child,
-        bottomNavigationBar: _hideNav
-            ? null
-            : NavigationBar(
-                selectedIndex: _index.clamp(0, 3),
-                onDestinationSelected: (index) {
-                  switch (index) {
-                    case 0:
-                      context.go('/customer');
-                    case 1:
-                      context.go('/customer/bookings');
-                    case 2:
-                      context.go('/customer/notifications');
-                    case 3:
-                      context.go('/customer/profile');
-                  }
-                },
-                destinations: const [
-                  NavigationDestination(icon: Icon(Icons.home), label: 'Home'),
-                  NavigationDestination(icon: Icon(Icons.calendar_month), label: 'Bookings'),
-                  NavigationDestination(icon: Icon(Icons.notifications), label: 'Alerts'),
-                  NavigationDestination(icon: Icon(Icons.person), label: 'Profile'),
-                ],
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        resizeToAvoidBottomInset: false,
+        body: Stack(
+          fit: StackFit.expand,
+          children: [
+            MediaQuery(
+              data: media.copyWith(
+                padding: media.padding.copyWith(bottom: 0),
               ),
+              child: child,
+            ),
+            if (!_hideNav && !keyboardOpen)
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: AppBottomNavBar(
+                  selectedIndex: _index.clamp(0, 3),
+                  onSelected: (index) {
+                    switch (index) {
+                      case 0:
+                        context.go('/customer');
+                      case 1:
+                        context.go('/customer/bookings');
+                      case 2:
+                        context.go('/customer/notifications');
+                      case 3:
+                        context.go('/customer/profile');
+                    }
+                  },
+                  items: [
+                    AppBottomNavItem(
+                      icon: Icons.home_outlined,
+                      selectedIcon: Icons.home_rounded,
+                      label: s.home,
+                    ),
+                    AppBottomNavItem(
+                      icon: Icons.calendar_month_outlined,
+                      selectedIcon: Icons.calendar_month_rounded,
+                      label: s.bookings,
+                    ),
+                    AppBottomNavItem(
+                      icon: Icons.notifications_outlined,
+                      selectedIcon: Icons.notifications_rounded,
+                      label: s.alerts,
+                    ),
+                    AppBottomNavItem(
+                      icon: Icons.person_outline_rounded,
+                      selectedIcon: Icons.person_rounded,
+                      label: s.profile,
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

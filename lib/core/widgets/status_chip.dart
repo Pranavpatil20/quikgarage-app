@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/app_strings.dart';
 import '../utils/status_utils.dart';
 
 class StatusChip extends StatelessWidget {
@@ -12,6 +13,13 @@ class StatusChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
     final color = StatusUtils.statusColor(status, brightness: brightness);
+    final s = AppStrings.of(context);
+    final label = s.bookingStatus(status);
+    final paymentFallback = s.paymentStatus(status);
+    final display = label != status
+        ? label
+        : (paymentFallback != status ? paymentFallback : StatusUtils.label(status));
+
     return Container(
       constraints: const BoxConstraints(maxWidth: 140),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -29,7 +37,7 @@ class StatusChip extends StatelessWidget {
           ],
           Flexible(
             child: Text(
-              StatusUtils.label(status),
+              display,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(

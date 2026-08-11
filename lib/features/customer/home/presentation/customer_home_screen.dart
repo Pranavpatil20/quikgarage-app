@@ -4,10 +4,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/providers/auth_provider.dart';
 import '../../../../core/providers/booking_provider.dart';
-import '../../../../core/utils/status_utils.dart';
 import '../../../../core/widgets/booking_card.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/widgets/status_chip.dart';
+import '../../../../l10n/app_strings.dart';
 import '../../../../theme/app_colors.dart';
 
 class CustomerHomeScreen extends ConsumerWidget {
@@ -18,6 +18,7 @@ class CustomerHomeScreen extends ConsumerWidget {
     final user = ref.watch(authStateProvider).value;
     final bookingsAsync = ref.watch(customerBookingsProvider(null));
     final theme = Theme.of(context);
+    final s = AppStrings.of(context);
 
     final activeBooking = bookingsAsync.maybeWhen(
       data: (list) {
@@ -31,6 +32,7 @@ class CustomerHomeScreen extends ConsumerWidget {
 
     return Scaffold(
       body: SafeArea(
+        bottom: false,
         child: RefreshIndicator(
           onRefresh: () async => ref.invalidate(customerBookingsProvider),
           child: CustomScrollView(
@@ -47,7 +49,7 @@ class CustomerHomeScreen extends ConsumerWidget {
                       const SizedBox(width: 16),
                       Expanded(
                         child: Text(
-                          'Hi ${user?.name ?? 'there'} 👋',
+                          s.customerHi(user?.name ?? ''),
                           style: theme.textTheme.headlineMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: theme.colorScheme.primary,
@@ -67,65 +69,89 @@ class CustomerHomeScreen extends ConsumerWidget {
                   padding: const EdgeInsets.all(16),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(16),
-                    child: Stack(
-                      children: [
-                        Container(
-                          height: 200,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.bottomCenter,
-                              end: Alignment.topCenter,
-                              colors: [
-                                AppColors.primary.withValues(alpha: 0.85),
-                                Colors.transparent,
-                              ],
-                            ),
-                          ),
-                          child: Image.network(
+                    child: SizedBox(
+                      height: 240,
+                      width: double.infinity,
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          Image.network(
                             'https://images.unsplash.com/photo-1617788138017-80e456137b25?w=800',
-                            height: 200,
-                            width: double.infinity,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Container(
-                              height: 200,
+                            errorBuilder: (_, _, _) => ColoredBox(
                               color: theme.colorScheme.primaryContainer,
                             ),
                           ),
-                        ),
-                        Positioned(
-                          left: 24,
-                          right: 24,
-                          bottom: 24,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Ready for a check-up?',
-                                style: theme.textTheme.headlineMedium?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                          // Dark gradient so white text stays readable.
+                          const DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  Color(0x33000000),
+                                  Color(0x99000000),
+                                  Color(0xE6000000),
+                                ],
+                                stops: [0.0, 0.45, 1.0],
                               ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Book a premium service and keep your vehicle running like new.',
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: Colors.white.withValues(alpha: 0.9),
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              ElevatedButton.icon(
-                                onPressed: () => context.push('/customer/book'),
-                                icon: const Icon(Icons.arrow_forward),
-                                label: const Text('Book Service'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.primary,
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
-                        ),
-                      ],
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Text(
+                                  s.readyForCheckup,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.titleLarge?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w700,
+                                    height: 1.2,
+                                    shadows: const [
+                                      Shadow(
+                                        blurRadius: 8,
+                                        color: Colors.black54,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  s.bookPremiumService,
+                                  maxLines: 3,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: Colors.white.withValues(alpha: 0.95),
+                                    height: 1.35,
+                                    shadows: const [
+                                      Shadow(
+                                        blurRadius: 6,
+                                        color: Colors.black45,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 14),
+                                ElevatedButton.icon(
+                                  onPressed: () => context.push('/customer/book'),
+                                  icon: const Icon(Icons.arrow_forward),
+                                  label: Text(s.bookService),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.white,
+                                    foregroundColor: AppColors.primary,
+                                    disabledForegroundColor:
+                                        AppColors.primary.withValues(alpha: 0.6),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -140,9 +166,9 @@ class CustomerHomeScreen extends ConsumerWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text('Service Status', style: theme.textTheme.headlineMedium),
+                            Text(s.serviceStatus, style: theme.textTheme.headlineMedium),
                             Text(
-                              'LIVE TRACK',
+                              s.liveTrack,
                               style: theme.textTheme.labelSmall?.copyWith(
                                 color: theme.colorScheme.primary,
                                 letterSpacing: 1,
@@ -161,7 +187,8 @@ class CustomerHomeScreen extends ConsumerWidget {
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          activeBooking.vehicleDetail?.displayName ?? 'Vehicle',
+                                          activeBooking.vehicleDetail?.displayName ??
+                                              s.vehicleLabel,
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                           style: theme.textTheme.headlineMedium?.copyWith(
@@ -199,10 +226,10 @@ class CustomerHomeScreen extends ConsumerWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('My Bookings', style: theme.textTheme.headlineMedium),
+                      Text(s.myBookings, style: theme.textTheme.headlineMedium),
                       TextButton(
                         onPressed: () => context.go('/customer/bookings'),
-                        child: const Text('View All'),
+                        child: Text(s.viewAll),
                       ),
                     ],
                   ),
@@ -244,7 +271,8 @@ class _ServiceProgressTracker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    const steps = ['In Garage', 'Started', 'Washing', 'Ready'];
+    final s = AppStrings.of(context);
+    final steps = [s.stepInGarage, s.stepStarted, s.stepWashing, s.stepReady];
     final activeIndex = switch (status) {
       'pending' || 'confirmed' => 0,
       'in_progress' => 1,

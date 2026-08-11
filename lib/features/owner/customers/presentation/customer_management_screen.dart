@@ -3,10 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/providers/customer_provider.dart';
-import '../../../../core/utils/status_utils.dart';
 import '../../../../core/widgets/booking_card.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/widgets/loading_view.dart';
+import '../../../../l10n/app_strings.dart';
 import '../../../../models/booking_model.dart';
 import '../../../../models/user_model.dart';
 import '../../../../repositories/booking_repository.dart';
@@ -23,10 +23,11 @@ class CustomerManagementScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final customersAsync = ref.watch(customersProvider);
     final theme = Theme.of(context);
+    final s = AppStrings.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Customer Management'),
+        title: Text(s.customerManagement),
         automaticallyImplyLeading: false,
       ),
       body: customersAsync.when(
@@ -37,7 +38,7 @@ class CustomerManagementScreen extends ConsumerWidget {
         ),
         data: (customers) {
           if (customers.isEmpty) {
-            return const Center(child: Text('No customers yet'));
+            return Center(child: Text(s.noCustomersYet));
           }
           return RefreshIndicator(
             onRefresh: () async => ref.invalidate(customersProvider),
@@ -66,7 +67,7 @@ class CustomerManagementScreen extends ConsumerWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                customer.name.isNotEmpty ? customer.name : 'Customer',
+                                customer.name.isNotEmpty ? customer.name : s.customerLabel,
                                 style: theme.textTheme.titleLarge,
                               ),
                               Text(
@@ -77,7 +78,7 @@ class CustomerManagementScreen extends ConsumerWidget {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'Tap to view service history',
+                                s.tapToViewHistory,
                                 style: theme.textTheme.labelSmall?.copyWith(
                                   color: theme.colorScheme.primary,
                                 ),
@@ -116,9 +117,10 @@ class CustomerHistoryScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final historyAsync = ref.watch(customerHistoryProvider(customerId));
     final theme = Theme.of(context);
+    final s = AppStrings.of(context);
     final titleName = customer?.name.isNotEmpty == true
         ? customer!.name
-        : (customer?.phone ?? 'Customer');
+        : (customer?.phone ?? s.customerLabel);
 
     return Scaffold(
       appBar: AppBar(
@@ -136,7 +138,7 @@ class CustomerHistoryScreen extends ConsumerWidget {
         ),
         data: (bookings) {
           if (bookings.isEmpty) {
-            return const Center(child: Text('No service history yet'));
+            return Center(child: Text(s.noServiceHistoryYet));
           }
           return RefreshIndicator(
             onRefresh: () async =>
@@ -149,7 +151,7 @@ class CustomerHistoryScreen extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Customer', style: theme.textTheme.headlineMedium),
+                        Text(s.customerLabel, style: theme.textTheme.headlineMedium),
                         const SizedBox(height: 8),
                         Text(customer!.name.isNotEmpty ? customer!.name : '—'),
                         Text(
@@ -160,7 +162,7 @@ class CustomerHistoryScreen extends ConsumerWidget {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          '${bookings.length} service${bookings.length == 1 ? '' : 's'}',
+                          '${bookings.length} ${s.bookings.toLowerCase()}',
                           style: theme.textTheme.labelSmall?.copyWith(
                             color: theme.colorScheme.primary,
                           ),
@@ -170,7 +172,7 @@ class CustomerHistoryScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 16),
                 ],
-                Text('Service History', style: theme.textTheme.headlineMedium),
+                Text(s.serviceHistory, style: theme.textTheme.headlineMedium),
                 const SizedBox(height: 12),
                 ...bookings.map((booking) {
                   return Padding(
@@ -182,8 +184,8 @@ class CustomerHistoryScreen extends ConsumerWidget {
                         Padding(
                           padding: const EdgeInsets.only(left: 8, top: 4),
                           child: Text(
-                            'Service: ${StatusUtils.serviceLabel(booking.serviceType)}'
-                            '${booking.notes.isNotEmpty ? ' · Notes: ${booking.notes}' : ''}',
+                            '${s.serviceCost}: ${s.serviceType(booking.serviceType)}'
+                            '${booking.notes.isNotEmpty ? ' · ${booking.notes}' : ''}',
                             style: theme.textTheme.labelSmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),

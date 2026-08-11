@@ -13,11 +13,14 @@ _$GarageModelImpl _$$GarageModelImplFromJson(Map<String, dynamic> json) =>
       address: json['address'] as String,
       openingTime: json['opening_time'] as String,
       closingTime: json['closing_time'] as String,
+      defaultServiceCost: json['default_service_cost'] == null
+          ? '899.00'
+          : _costFromJson(json['default_service_cost']),
       owner: (json['owner'] as num?)?.toInt(),
       ownerName: json['owner_name'] as String?,
-      createdAt: json['createdAt'] == null
+      createdAt: json['created_at'] == null
           ? null
-          : DateTime.parse(json['createdAt'] as String),
+          : DateTime.parse(json['created_at'] as String),
     );
 
 Map<String, dynamic> _$$GarageModelImplToJson(_$GarageModelImpl instance) =>
@@ -27,7 +30,8 @@ Map<String, dynamic> _$$GarageModelImplToJson(_$GarageModelImpl instance) =>
       'address': instance.address,
       'opening_time': instance.openingTime,
       'closing_time': instance.closingTime,
+      'default_service_cost': instance.defaultServiceCost,
       'owner': instance.owner,
       'owner_name': instance.ownerName,
-      'createdAt': instance.createdAt?.toIso8601String(),
+      'created_at': instance.createdAt?.toIso8601String(),
     };

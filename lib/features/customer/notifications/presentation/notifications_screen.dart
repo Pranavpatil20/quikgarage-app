@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/providers/notification_provider.dart';
 import '../../../../core/widgets/loading_view.dart';
 import '../../../../core/widgets/glass_card.dart';
+import '../../../../l10n/app_strings.dart';
 import '../../../../repositories/notification_repository.dart';
 
 class NotificationsScreen extends ConsumerWidget {
@@ -16,10 +17,11 @@ class NotificationsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final notificationsAsync = ref.watch(notificationsProvider);
     final theme = Theme.of(context);
+    final s = AppStrings.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Notifications'),
+        title: Text(s.notifications),
         automaticallyImplyLeading: false,
         leading: isOwner
             ? IconButton(
@@ -33,7 +35,7 @@ class NotificationsScreen extends ConsumerWidget {
               await ref.read(notificationRepositoryProvider).markAllRead();
               ref.invalidate(notificationsProvider);
             },
-            child: const Text('Mark all read'),
+            child: Text(s.markAllRead),
           ),
         ],
       ),
@@ -45,12 +47,12 @@ class NotificationsScreen extends ConsumerWidget {
         ),
         data: (notifications) {
           if (notifications.isEmpty) {
-            return const Center(child: Text('No notifications'));
+            return Center(child: Text(s.noNotifications));
           }
           return ListView.separated(
             padding: const EdgeInsets.all(16),
             itemCount: notifications.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            separatorBuilder: (_, _) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final n = notifications[index];
               return GlassCard(

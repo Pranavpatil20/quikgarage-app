@@ -35,6 +35,11 @@ class StorageService {
 
   Future<String?> getThemeMode() => _storage.read(key: AppConstants.themeModeKey);
 
+  Future<void> saveLocale(String code) =>
+      _storage.write(key: AppConstants.localeKey, value: code);
+
+  Future<String?> getLocale() => _storage.read(key: AppConstants.localeKey);
+
   Future<void> clearAll() async {
     await Future.wait([
       _storage.delete(key: AppConstants.accessTokenKey),

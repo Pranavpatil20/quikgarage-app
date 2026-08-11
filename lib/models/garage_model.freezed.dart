@@ -29,9 +29,12 @@ mixin _$GarageModel {
   String get openingTime => throw _privateConstructorUsedError;
   @JsonKey(name: 'closing_time')
   String get closingTime => throw _privateConstructorUsedError;
+  @JsonKey(name: 'default_service_cost', fromJson: _costFromJson)
+  String get defaultServiceCost => throw _privateConstructorUsedError;
   int? get owner => throw _privateConstructorUsedError;
   @JsonKey(name: 'owner_name')
   String? get ownerName => throw _privateConstructorUsedError;
+  @JsonKey(name: 'created_at')
   DateTime? get createdAt => throw _privateConstructorUsedError;
 
   /// Serializes this GarageModel to a JSON map.
@@ -57,9 +60,11 @@ abstract class $GarageModelCopyWith<$Res> {
     String address,
     @JsonKey(name: 'opening_time') String openingTime,
     @JsonKey(name: 'closing_time') String closingTime,
+    @JsonKey(name: 'default_service_cost', fromJson: _costFromJson)
+    String defaultServiceCost,
     int? owner,
     @JsonKey(name: 'owner_name') String? ownerName,
-    DateTime? createdAt,
+    @JsonKey(name: 'created_at') DateTime? createdAt,
   });
 }
 
@@ -83,6 +88,7 @@ class _$GarageModelCopyWithImpl<$Res, $Val extends GarageModel>
     Object? address = null,
     Object? openingTime = null,
     Object? closingTime = null,
+    Object? defaultServiceCost = null,
     Object? owner = freezed,
     Object? ownerName = freezed,
     Object? createdAt = freezed,
@@ -108,6 +114,10 @@ class _$GarageModelCopyWithImpl<$Res, $Val extends GarageModel>
             closingTime: null == closingTime
                 ? _value.closingTime
                 : closingTime // ignore: cast_nullable_to_non_nullable
+                      as String,
+            defaultServiceCost: null == defaultServiceCost
+                ? _value.defaultServiceCost
+                : defaultServiceCost // ignore: cast_nullable_to_non_nullable
                       as String,
             owner: freezed == owner
                 ? _value.owner
@@ -142,9 +152,11 @@ abstract class _$$GarageModelImplCopyWith<$Res>
     String address,
     @JsonKey(name: 'opening_time') String openingTime,
     @JsonKey(name: 'closing_time') String closingTime,
+    @JsonKey(name: 'default_service_cost', fromJson: _costFromJson)
+    String defaultServiceCost,
     int? owner,
     @JsonKey(name: 'owner_name') String? ownerName,
-    DateTime? createdAt,
+    @JsonKey(name: 'created_at') DateTime? createdAt,
   });
 }
 
@@ -167,6 +179,7 @@ class __$$GarageModelImplCopyWithImpl<$Res>
     Object? address = null,
     Object? openingTime = null,
     Object? closingTime = null,
+    Object? defaultServiceCost = null,
     Object? owner = freezed,
     Object? ownerName = freezed,
     Object? createdAt = freezed,
@@ -193,6 +206,10 @@ class __$$GarageModelImplCopyWithImpl<$Res>
             ? _value.closingTime
             : closingTime // ignore: cast_nullable_to_non_nullable
                   as String,
+        defaultServiceCost: null == defaultServiceCost
+            ? _value.defaultServiceCost
+            : defaultServiceCost // ignore: cast_nullable_to_non_nullable
+                  as String,
         owner: freezed == owner
             ? _value.owner
             : owner // ignore: cast_nullable_to_non_nullable
@@ -212,17 +229,19 @@ class __$$GarageModelImplCopyWithImpl<$Res>
 
 /// @nodoc
 @JsonSerializable()
-class _$GarageModelImpl implements _GarageModel {
+class _$GarageModelImpl extends _GarageModel {
   const _$GarageModelImpl({
     required this.id,
     @JsonKey(name: 'garage_name') required this.garageName,
     required this.address,
     @JsonKey(name: 'opening_time') required this.openingTime,
     @JsonKey(name: 'closing_time') required this.closingTime,
+    @JsonKey(name: 'default_service_cost', fromJson: _costFromJson)
+    this.defaultServiceCost = '899.00',
     this.owner,
     @JsonKey(name: 'owner_name') this.ownerName,
-    this.createdAt,
-  });
+    @JsonKey(name: 'created_at') this.createdAt,
+  }) : super._();
 
   factory _$GarageModelImpl.fromJson(Map<String, dynamic> json) =>
       _$$GarageModelImplFromJson(json);
@@ -241,16 +260,20 @@ class _$GarageModelImpl implements _GarageModel {
   @JsonKey(name: 'closing_time')
   final String closingTime;
   @override
+  @JsonKey(name: 'default_service_cost', fromJson: _costFromJson)
+  final String defaultServiceCost;
+  @override
   final int? owner;
   @override
   @JsonKey(name: 'owner_name')
   final String? ownerName;
   @override
+  @JsonKey(name: 'created_at')
   final DateTime? createdAt;
 
   @override
   String toString() {
-    return 'GarageModel(id: $id, garageName: $garageName, address: $address, openingTime: $openingTime, closingTime: $closingTime, owner: $owner, ownerName: $ownerName, createdAt: $createdAt)';
+    return 'GarageModel(id: $id, garageName: $garageName, address: $address, openingTime: $openingTime, closingTime: $closingTime, defaultServiceCost: $defaultServiceCost, owner: $owner, ownerName: $ownerName, createdAt: $createdAt)';
   }
 
   @override
@@ -266,6 +289,8 @@ class _$GarageModelImpl implements _GarageModel {
                 other.openingTime == openingTime) &&
             (identical(other.closingTime, closingTime) ||
                 other.closingTime == closingTime) &&
+            (identical(other.defaultServiceCost, defaultServiceCost) ||
+                other.defaultServiceCost == defaultServiceCost) &&
             (identical(other.owner, owner) || other.owner == owner) &&
             (identical(other.ownerName, ownerName) ||
                 other.ownerName == ownerName) &&
@@ -282,6 +307,7 @@ class _$GarageModelImpl implements _GarageModel {
     address,
     openingTime,
     closingTime,
+    defaultServiceCost,
     owner,
     ownerName,
     createdAt,
@@ -301,17 +327,20 @@ class _$GarageModelImpl implements _GarageModel {
   }
 }
 
-abstract class _GarageModel implements GarageModel {
+abstract class _GarageModel extends GarageModel {
   const factory _GarageModel({
     required final int id,
     @JsonKey(name: 'garage_name') required final String garageName,
     required final String address,
     @JsonKey(name: 'opening_time') required final String openingTime,
     @JsonKey(name: 'closing_time') required final String closingTime,
+    @JsonKey(name: 'default_service_cost', fromJson: _costFromJson)
+    final String defaultServiceCost,
     final int? owner,
     @JsonKey(name: 'owner_name') final String? ownerName,
-    final DateTime? createdAt,
+    @JsonKey(name: 'created_at') final DateTime? createdAt,
   }) = _$GarageModelImpl;
+  const _GarageModel._() : super._();
 
   factory _GarageModel.fromJson(Map<String, dynamic> json) =
       _$GarageModelImpl.fromJson;
@@ -330,11 +359,15 @@ abstract class _GarageModel implements GarageModel {
   @JsonKey(name: 'closing_time')
   String get closingTime;
   @override
+  @JsonKey(name: 'default_service_cost', fromJson: _costFromJson)
+  String get defaultServiceCost;
+  @override
   int? get owner;
   @override
   @JsonKey(name: 'owner_name')
   String? get ownerName;
   @override
+  @JsonKey(name: 'created_at')
   DateTime? get createdAt;
 
   /// Create a copy of GarageModel

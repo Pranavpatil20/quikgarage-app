@@ -3,11 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/providers/invoice_provider.dart';
-import '../../../../core/utils/status_utils.dart';
+import '../../../../core/widgets/app_overlays.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/widgets/loading_view.dart';
 import '../../../../core/widgets/segmented_tabs.dart';
 import '../../../../core/widgets/status_chip.dart';
+import '../../../../l10n/app_strings.dart';
 import '../../../../models/invoice_model.dart';
 import '../../../../repositories/invoice_repository.dart';
 
@@ -20,7 +21,6 @@ class BillingScreen extends ConsumerStatefulWidget {
 
 class _BillingScreenState extends ConsumerState<BillingScreen> {
   int _tabIndex = 0;
-  static const _tabs = ['All', 'Pending', 'Paid'];
 
   @override
   Widget build(BuildContext context) {
@@ -31,18 +31,20 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
             : null;
     final invoicesAsync = ref.watch(invoicesProvider(statusFilter));
     final theme = Theme.of(context);
+    final s = AppStrings.of(context);
+    final tabs = [s.tabAll, s.tabPending, s.tabPaid];
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Billing & Invoices'),
+        title: Text(s.billingInvoices),
         automaticallyImplyLeading: false,
       ),
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: SegmentedTabs(
-              tabs: _tabs,
+              tabs: tabs,
               selectedIndex: _tabIndex,
               onChanged: (i) => setState(() => _tabIndex = i),
             ),
@@ -59,10 +61,10 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
                   return Center(
                     child: Text(
                       _tabIndex == 2
-                          ? 'No paid invoices yet'
+                          ? s.noPaidInvoicesYet
                           : _tabIndex == 1
-                              ? 'No pending invoices'
-                              : 'No invoices yet\nComplete a booking to create one',
+                              ? s.noPendingInvoices
+                              : s.noInvoicesYet,
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
@@ -75,7 +77,7 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
                   child: ListView.separated(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                     itemCount: invoices.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    separatorBuilder: (_, _) => const SizedBox(height: 12),
                     itemBuilder: (context, index) {
                       final invoice = invoices[index];
                       return _InvoiceCard(
@@ -96,10 +98,11 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
 
   Future<void> _openInvoiceActions(InvoiceModel invoice) async {
     final theme = Theme.of(context);
+    final s = AppStrings.of(context);
     final isPending = invoice.paymentStatus == 'pending' ||
         invoice.paymentStatus == 'partial';
 
-    await showModalBottomSheet<void>(
+    await showAppModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
       isScrollControlled: true,
@@ -117,7 +120,7 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Total ₹${invoice.totalAmount}',
+                  '${s.total} ₹${invoice.totalAmount}',
                   style: theme.textTheme.bodyLarge?.copyWith(
                     color: theme.colorScheme.primary,
                     fontWeight: FontWeight.w600,
@@ -127,8 +130,8 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.edit_outlined),
-                  title: const Text('Edit amount'),
-                  subtitle: const Text('Update service / parts cost'),
+                  title: Text(s.editAmount),
+                  subtitle: Text(s.updateServicePartsCost),
                   onTap: () {
                     Navigator.pop(ctx);
                     _editInvoice(invoice);
@@ -138,8 +141,7 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
                   ListTile(
                     contentPadding: EdgeInsets.zero,
                     leading: Icon(Icons.check_circle, color: theme.colorScheme.primary),
-                    title: const Text('Mark as Paid'),
-                    subtitle: const Text('Customer has paid the full amount'),
+                    title: Text(s.markAsPaid),
                     onTap: () {
                       Navigator.pop(ctx);
                       _updatePaymentStatus(invoice.id, 'paid');
@@ -148,8 +150,7 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
                   ListTile(
                     contentPadding: EdgeInsets.zero,
                     leading: const Icon(Icons.payments_outlined),
-                    title: const Text('Mark as Partial'),
-                    subtitle: const Text('Customer paid only part of the amount'),
+                    title: Text(s.markAsPartial),
                     onTap: () {
                       Navigator.pop(ctx);
                       _updatePaymentStatus(invoice.id, 'partial');
@@ -160,7 +161,7 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
                   ListTile(
                     contentPadding: EdgeInsets.zero,
                     leading: const Icon(Icons.undo),
-                    title: const Text('Move back to Pending'),
+                    title: Text(s.moveBackToPending),
                     onTap: () {
                       Navigator.pop(ctx);
                       _updatePaymentStatus(invoice.id, 'pending');
@@ -176,7 +177,8 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
   }
 
   Future<void> _editInvoice(InvoiceModel invoice) async {
-    final result = await showDialog<({String service, String parts})>(
+    final s = AppStrings.of(context);
+    final result = await showAppDialog<({String service, String parts})>(
       context: context,
       builder: (ctx) => _EditInvoiceDialog(invoice: invoice),
     );
@@ -191,7 +193,7 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
       ref.invalidate(invoicesProvider);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Invoice amount updated')),
+          SnackBar(content: Text(s.invoiceAmountUpdated)),
         );
       }
     } catch (e) {
@@ -204,21 +206,22 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
   }
 
   Future<void> _confirmMarkPaid(InvoiceModel invoice) async {
-    final ok = await showDialog<bool>(
+    final s = AppStrings.of(context);
+    final ok = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Mark as Paid?'),
+        title: Text('${s.markAsPaid}?'),
         content: Text(
-          'Confirm that ₹${invoice.totalAmount} was received for Invoice #${invoice.id}.',
+          '₹${invoice.totalAmount} — Invoice #${invoice.id}',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: Text(s.cancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Yes, Paid'),
+            child: Text(s.yesPaid),
           ),
         ],
       ),
@@ -229,15 +232,16 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
   }
 
   Future<void> _updatePaymentStatus(int id, String status) async {
+    final s = AppStrings.of(context);
     try {
       await ref.read(invoiceRepositoryProvider).updateInvoice(id, {
         'payment_status': status,
       });
       ref.invalidate(invoicesProvider);
       if (mounted) {
-        final label = StatusUtils.label(status);
+        final label = s.paymentStatus(status);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Invoice marked as $label')),
+          SnackBar(content: Text('${s.statusUpdated}: $label')),
         );
       }
     } catch (e) {
@@ -264,6 +268,7 @@ class _InvoiceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final s = AppStrings.of(context);
     final booking = invoice.bookingDetail;
     final isPending = invoice.paymentStatus == 'pending' ||
         invoice.paymentStatus == 'partial';
@@ -307,17 +312,17 @@ class _InvoiceCard extends StatelessWidget {
           if (booking != null) ...[
             const SizedBox(height: 4),
             Text(
-              'Service: ${StatusUtils.serviceLabel(booking.serviceType)}',
+              '${s.serviceCost}: ${s.serviceType(booking.serviceType)}',
               style: theme.textTheme.labelSmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
           ],
           const Divider(height: 24),
-          _row(theme, 'Service', '₹${invoice.serviceCost}'),
-          _row(theme, 'Parts', '₹${invoice.partsCost}'),
+          _row(theme, s.serviceCost, '₹${invoice.serviceCost}'),
+          _row(theme, s.partsCost, '₹${invoice.partsCost}'),
           const SizedBox(height: 8),
-          _row(theme, 'Total', '₹${invoice.totalAmount}', bold: true),
+          _row(theme, s.total, '₹${invoice.totalAmount}', bold: true),
           if (isPending) ...[
             const SizedBox(height: 12),
             Row(
@@ -325,14 +330,14 @@ class _InvoiceCard extends StatelessWidget {
                 Expanded(
                   child: OutlinedButton(
                     onPressed: onTap,
-                    child: const Text('Manage'),
+                    child: Text(s.manage),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: ElevatedButton(
                     onPressed: onMarkPaid,
-                    child: const Text('Mark Paid'),
+                    child: Text(s.markPaid),
                   ),
                 ),
               ],
@@ -392,8 +397,9 @@ class _EditInvoiceDialogState extends State<_EditInvoiceDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final s = AppStrings.of(context);
     return AlertDialog(
-      title: Text('Edit Invoice #${widget.invoice.id}'),
+      title: Text('${s.editAmount} #${widget.invoice.id}'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -403,9 +409,9 @@ class _EditInvoiceDialogState extends State<_EditInvoiceDialog> {
             inputFormatters: [
               FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
             ],
-            decoration: const InputDecoration(
-              labelText: 'Service cost (₹)',
-              prefixIcon: Icon(Icons.build),
+            decoration: InputDecoration(
+              labelText: '${s.serviceCost} (₹)',
+              prefixIcon: const Icon(Icons.build),
             ),
           ),
           const SizedBox(height: 12),
@@ -415,14 +421,14 @@ class _EditInvoiceDialogState extends State<_EditInvoiceDialog> {
             inputFormatters: [
               FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
             ],
-            decoration: const InputDecoration(
-              labelText: 'Parts cost (₹)',
-              prefixIcon: Icon(Icons.settings),
+            decoration: InputDecoration(
+              labelText: '${s.partsCost} (₹)',
+              prefixIcon: const Icon(Icons.settings),
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Total updates automatically after save.',
+            s.updateServicePartsCost,
             style: theme.textTheme.labelSmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -432,7 +438,7 @@ class _EditInvoiceDialogState extends State<_EditInvoiceDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(s.cancel),
         ),
         ElevatedButton(
           onPressed: () {
@@ -444,7 +450,7 @@ class _EditInvoiceDialogState extends State<_EditInvoiceDialog> {
               ),
             );
           },
-          child: const Text('Save'),
+          child: Text(s.save),
         ),
       ],
     );

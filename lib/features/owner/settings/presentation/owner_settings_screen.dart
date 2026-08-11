@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/providers/auth_provider.dart';
 import '../../../../core/providers/garage_provider.dart';
-import '../../../../core/widgets/glass_card.dart';
+import '../../../../core/providers/locale_provider.dart';
+import '../../../../core/widgets/app_bottom_nav_bar.dart';
+import '../../../../core/widgets/app_overlays.dart';
+import '../../../../l10n/app_strings.dart';
+import '../../../../models/garage_model.dart';
 import '../../../../repositories/garage_repository.dart';
 import '../../../../repositories/user_repository.dart';
 
@@ -20,12 +25,14 @@ class _OwnerSettingsScreenState extends ConsumerState<OwnerSettingsScreen> {
   final _phoneController = TextEditingController();
   final _garageNameController = TextEditingController();
   final _addressController = TextEditingController();
+  final _serviceCostController = TextEditingController();
   TimeOfDay _opening = const TimeOfDay(hour: 9, minute: 0);
   TimeOfDay _closing = const TimeOfDay(hour: 18, minute: 0);
   bool _saving = false;
   bool _savingProfile = false;
   bool _fieldsHydrated = false;
   int? _hydratedUserId;
+  int? _hydratedGarageId;
 
   @override
   void dispose() {
@@ -33,6 +40,7 @@ class _OwnerSettingsScreenState extends ConsumerState<OwnerSettingsScreen> {
     _phoneController.dispose();
     _garageNameController.dispose();
     _addressController.dispose();
+    _serviceCostController.dispose();
     super.dispose();
   }
 
@@ -52,6 +60,16 @@ class _OwnerSettingsScreenState extends ConsumerState<OwnerSettingsScreen> {
     });
   }
 
+  void _hydrateGarage(GarageModel garage) {
+    _garageNameController.text = garage.garageName;
+    _addressController.text = garage.address;
+    _opening = _parseTime(garage.openingTime);
+    _closing = _parseTime(garage.closingTime);
+    _serviceCostController.text = garage.displayServiceCost;
+    _fieldsHydrated = true;
+    _hydratedGarageId = garage.id;
+  }
+
   TimeOfDay _parseTime(String value) {
     final parts = value.split(':');
     if (parts.length < 2) return const TimeOfDay(hour: 9, minute: 0);
@@ -64,12 +82,17 @@ class _OwnerSettingsScreenState extends ConsumerState<OwnerSettingsScreen> {
   String _formatApiTime(TimeOfDay t) =>
       '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}:00';
 
+  String _normalizeCost(String raw) {
+    final parsed = double.tryParse(raw.trim().replaceAll(',', ''));
+    if (parsed == null) return '';
+    return parsed.toStringAsFixed(2);
+  }
+
   Future<void> _saveProfile() async {
+    final s = AppStrings.of(context);
     final name = _nameController.text.trim();
     if (name.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter your name')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(s.enterName)));
       return;
     }
     setState(() => _savingProfile = true);
@@ -77,9 +100,7 @@ class _OwnerSettingsScreenState extends ConsumerState<OwnerSettingsScreen> {
       final user = await ref.read(userRepositoryProvider).updateProfile(name: name);
       ref.read(authStateProvider.notifier).setUser(user);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profile updated')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(s.profileUpdated)));
       }
     } catch (e) {
       if (mounted) {
@@ -91,12 +112,16 @@ class _OwnerSettingsScreenState extends ConsumerState<OwnerSettingsScreen> {
   }
 
   Future<void> _createGarage() async {
+    final s = AppStrings.of(context);
     final name = _garageNameController.text.trim();
     final address = _addressController.text.trim();
+    final cost = _normalizeCost(_serviceCostController.text);
     if (name.isEmpty || address.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter garage name and address')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(s.enterGarageDetails)));
+      return;
+    }
+    if (cost.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(s.enterValidAmount)));
       return;
     }
     setState(() => _saving = true);
@@ -106,13 +131,14 @@ class _OwnerSettingsScreenState extends ConsumerState<OwnerSettingsScreen> {
         'address': address,
         'opening_time': _formatApiTime(_opening),
         'closing_time': _formatApiTime(_closing),
+        'default_service_cost': cost,
       });
+      _fieldsHydrated = false;
       ref.invalidate(myGarageProvider);
       ref.invalidate(garagesProvider);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Garage created successfully')),
-        );
+        Navigator.of(context).maybePop();
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(s.garageCreated)));
       }
     } catch (e) {
       if (mounted) {
@@ -124,12 +150,16 @@ class _OwnerSettingsScreenState extends ConsumerState<OwnerSettingsScreen> {
   }
 
   Future<void> _saveGarage(int id) async {
+    final s = AppStrings.of(context);
     final name = _garageNameController.text.trim();
     final address = _addressController.text.trim();
+    final cost = _normalizeCost(_serviceCostController.text);
     if (name.isEmpty || address.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter garage name and address')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(s.enterGarageDetails)));
+      return;
+    }
+    if (cost.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(s.enterValidAmount)));
       return;
     }
     setState(() => _saving = true);
@@ -139,13 +169,14 @@ class _OwnerSettingsScreenState extends ConsumerState<OwnerSettingsScreen> {
         'address': address,
         'opening_time': _formatApiTime(_opening),
         'closing_time': _formatApiTime(_closing),
+        'default_service_cost': cost,
       });
+      _fieldsHydrated = false;
       ref.invalidate(myGarageProvider);
       ref.invalidate(garagesProvider);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Garage updated')),
-        );
+        Navigator.of(context).maybePop();
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(s.garageUpdated)));
       }
     } catch (e) {
       if (mounted) {
@@ -156,88 +187,471 @@ class _OwnerSettingsScreenState extends ConsumerState<OwnerSettingsScreen> {
     }
   }
 
-  Widget _garageForm({
-    required ThemeData theme,
-    required bool isCreate,
-    int? garageId,
-  }) {
-    return GlassCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            isCreate ? 'Create Your Garage' : 'Garage Details',
-            style: theme.textTheme.headlineMedium,
+  Future<void> _showLanguagePicker() async {
+    final s = AppStrings.of(context);
+    final current = ref.read(localeProvider);
+    await showAppModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                  child: Text(s.selectLanguage, style: Theme.of(ctx).textTheme.titleMedium),
+                ),
+                ...AppLanguage.values.map((lang) {
+                  return ListTile(
+                    leading: Icon(
+                      current == lang ? Icons.radio_button_checked : Icons.radio_button_off,
+                      color: Theme.of(ctx).colorScheme.primary,
+                    ),
+                    title: Text(lang.label),
+                    onTap: () async {
+                      await ref.read(localeProvider.notifier).setLanguage(lang);
+                      if (ctx.mounted) Navigator.pop(ctx);
+                    },
+                  );
+                }),
+                const SizedBox(height: 8),
+              ],
+            ),
           ),
-          if (isCreate) ...[
-            const SizedBox(height: 8),
-            Text(
-              'Customers can only book after you create a garage.',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+        );
+      },
+    );
+  }
+
+  Future<void> _showEditProfileSheet() async {
+    final s = AppStrings.of(context);
+    final theme = Theme.of(context);
+    await showAppModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (ctx) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            bottom: MediaQuery.viewInsetsOf(ctx).bottom + 24,
+            top: 8,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(s.editProfile, style: theme.textTheme.titleLarge),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _nameController,
+                decoration: InputDecoration(
+                  labelText: s.yourName,
+                  prefixIcon: const Icon(Icons.person),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                enabled: false,
+                controller: _phoneController,
+                decoration: InputDecoration(
+                  labelText: s.phone,
+                  prefixIcon: const Icon(Icons.phone),
+                ),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _savingProfile
+                    ? null
+                    : () async {
+                        await _saveProfile();
+                        if (ctx.mounted) Navigator.pop(ctx);
+                      },
+                child: _savingProfile
+                    ? const SizedBox(
+                        height: 22,
+                        width: 22,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(s.saveProfile),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _showGarageEditor({GarageModel? garage}) async {
+    final s = AppStrings.of(context);
+    final theme = Theme.of(context);
+    final isCreate = garage == null;
+
+    if (garage != null) {
+      _hydrateGarage(garage);
+    } else if (!_fieldsHydrated) {
+      _garageNameController.clear();
+      _addressController.clear();
+      _serviceCostController.text = '899';
+      _opening = const TimeOfDay(hour: 9, minute: 0);
+      _closing = const TimeOfDay(hour: 20, minute: 0);
+    }
+
+    await showAppModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setSheetState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 16,
+                right: 16,
+                bottom: MediaQuery.viewInsetsOf(ctx).bottom + 24,
+                top: 8,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      isCreate ? s.createYourGarage : s.editGarage,
+                      style: theme.textTheme.titleLarge,
+                    ),
+                    if (isCreate) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        s.createGarageHint,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _garageNameController,
+                      decoration: InputDecoration(
+                        labelText: s.garageName,
+                        prefixIcon: const Icon(Icons.store),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _addressController,
+                      maxLines: 2,
+                      decoration: InputDecoration(
+                        labelText: s.address,
+                        prefixIcon: const Icon(Icons.location_on),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _serviceCostController,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+                      ],
+                      decoration: InputDecoration(
+                        labelText: s.generalServiceAmount,
+                        helperText: s.generalServiceHint,
+                        prefixText: '₹ ',
+                        prefixIcon: const Icon(Icons.payments_outlined),
+                      ),
+                    ),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(s.openingTime),
+                      subtitle: Text(_opening.format(ctx)),
+                      trailing: const Icon(Icons.access_time),
+                      onTap: () async {
+                        final t = await showTimePicker(context: ctx, initialTime: _opening);
+                        if (t != null) setSheetState(() => _opening = t);
+                      },
+                    ),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(s.closingTime),
+                      subtitle: Text(_closing.format(ctx)),
+                      trailing: const Icon(Icons.access_time),
+                      onTap: () async {
+                        final t = await showTimePicker(context: ctx, initialTime: _closing);
+                        if (t != null) setSheetState(() => _closing = t);
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    ElevatedButton(
+                      onPressed: _saving
+                          ? null
+                          : () {
+                              if (isCreate) {
+                                _createGarage();
+                              } else {
+                                _saveGarage(garage.id);
+                              }
+                            },
+                      child: _saving
+                          ? const SizedBox(
+                              height: 22,
+                              width: 22,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Text(isCreate ? s.createGarage : s.saveGarage),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showSupport() {
+    final s = AppStrings.of(context);
+    showAppDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(s.supportFeedback),
+        content: Text(s.supportMessage),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(s.cancel)),
+        ],
+      ),
+    );
+  }
+
+  Widget _sectionLabel(String text, ThemeData theme) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 8, bottom: 8),
+      child: Text(
+        text.toUpperCase(),
+        style: theme.textTheme.labelSmall?.copyWith(
+          letterSpacing: 1.2,
+          fontWeight: FontWeight.w600,
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
+      ),
+    );
+  }
+
+  Widget _settingsCard({required List<Widget> children}) {
+    final theme = Theme.of(context);
+    return Material(
+      color: theme.colorScheme.surfaceContainerLowest,
+      elevation: 0.5,
+      shadowColor: Colors.black26,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.6)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(children: children),
+    );
+  }
+
+  Widget _settingsRow({
+    required Color iconBg,
+    required Color iconColor,
+    required IconData icon,
+    required String title,
+    String? subtitle,
+    Widget? trailing,
+    VoidCallback? onTap,
+    Color? titleColor,
+  }) {
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: iconBg,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: iconColor, size: 22),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w500,
+                      color: titleColor,
+                    ),
+                  ),
+                  if (subtitle != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
+            trailing ??
+                Icon(
+                  Icons.chevron_right,
+                  color: theme.colorScheme.outlineVariant,
+                ),
           ],
-          const SizedBox(height: 16),
-          TextField(
-            controller: _garageNameController,
-            decoration: const InputDecoration(
-              labelText: 'Garage Name',
-              hintText: 'e.g. Raj Garage',
-              prefixIcon: Icon(Icons.store),
+        ),
+      ),
+    );
+  }
+
+  Widget _garageProfileCard(GarageModel garage, AppStrings s, ThemeData theme) {
+    return _settingsCard(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    width: 88,
+                    height: 88,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: theme.colorScheme.outlineVariant),
+                      color: theme.colorScheme.surfaceContainerHigh,
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Icon(
+                        Icons.garage_outlined,
+                        size: 40,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    right: -6,
+                    bottom: -6,
+                    child: Material(
+                      color: theme.colorScheme.primary,
+                      shape: const CircleBorder(),
+                      elevation: 2,
+                      child: InkWell(
+                        customBorder: const CircleBorder(),
+                        onTap: () => _showGarageEditor(garage: garage),
+                        child: const SizedBox(
+                          width: 32,
+                          height: 32,
+                          child: Icon(Icons.edit, size: 16, color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      garage.garageName,
+                      style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        _pill(
+                          theme,
+                          icon: Icons.schedule,
+                          label: garage.formattedHours,
+                        ),
+                        _pill(
+                          theme,
+                          icon: Icons.payments_outlined,
+                          label: s.avgServiceCost(garage.displayServiceCost),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _pill(ThemeData theme, {required IconData icon, required String label}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: theme.colorScheme.onSurfaceVariant),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
             ),
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _addressController,
-            maxLines: 2,
-            decoration: const InputDecoration(
-              labelText: 'Address',
-              hintText: 'Full garage address',
-              prefixIcon: Icon(Icons.location_on),
-            ),
-          ),
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            title: const Text('Opening Time'),
-            subtitle: Text(_opening.format(context)),
-            trailing: const Icon(Icons.access_time),
-            onTap: () async {
-              final t = await showTimePicker(context: context, initialTime: _opening);
-              if (t != null) setState(() => _opening = t);
-            },
-          ),
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            title: const Text('Closing Time'),
-            subtitle: Text(_closing.format(context)),
-            trailing: const Icon(Icons.access_time),
-            onTap: () async {
-              final t = await showTimePicker(context: context, initialTime: _closing);
-              if (t != null) setState(() => _closing = t);
-            },
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: _saving
-                ? null
-                : () {
-                    if (isCreate) {
-                      _createGarage();
-                    } else if (garageId != null) {
-                      _saveGarage(garageId);
-                    }
-                  },
-            child: _saving
-                ? const SizedBox(
-                    height: 24,
-                    width: 24,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Text(isCreate ? 'Create Garage' : 'Save Garage'),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _emptyGarageCard(AppStrings s, ThemeData theme) {
+    return _settingsCard(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+              Icon(Icons.storefront_outlined, size: 40, color: theme.colorScheme.primary),
+              const SizedBox(height: 12),
+              Text(s.noGarageYet, style: theme.textTheme.titleMedium),
+              const SizedBox(height: 6),
+              Text(
+                s.setUpGarageCta,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => _showGarageEditor(),
+                child: Text(s.createGarage),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -246,7 +660,9 @@ class _OwnerSettingsScreenState extends ConsumerState<OwnerSettingsScreen> {
     final user = ref.watch(authStateProvider).value;
     final garageAsync = ref.watch(myGarageProvider);
     final themeMode = ref.watch(themeModeProvider);
+    final language = ref.watch(localeProvider);
     final theme = Theme.of(context);
+    final s = AppStrings.of(context);
 
     if (user != null) {
       final shouldHydrate = _hydratedUserId != user.id ||
@@ -264,98 +680,149 @@ class _OwnerSettingsScreenState extends ConsumerState<OwnerSettingsScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-        automaticallyImplyLeading: false,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          GlassCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Profile', style: theme.textTheme.headlineMedium),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: _nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Your Name',
-                    prefixIcon: Icon(Icons.person),
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+              child: Row(
+                children: [
+                  Text(
+                    s.appName,
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  enabled: false,
-                  controller: _phoneController,
-                  decoration: const InputDecoration(
-                    labelText: 'Phone',
-                    prefixIcon: Icon(Icons.phone),
+                  const Spacer(),
+                  CircleAvatar(
+                    radius: 20,
+                    backgroundColor: theme.colorScheme.surfaceContainerHigh,
+                    child: Text(
+                      (user?.name.isNotEmpty == true)
+                          ? user!.name.trim()[0].toUpperCase()
+                          : '?',
+                      style: TextStyle(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: _savingProfile ? null : _saveProfile,
-                  child: _savingProfile
-                      ? const SizedBox(
-                          height: 24,
-                          width: 24,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('Save Profile'),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          garageAsync.when(
-            loading: () => const Center(
-              child: Padding(
-                padding: EdgeInsets.all(24),
-                child: CircularProgressIndicator(),
+                ],
               ),
             ),
-            error: (_, __) => _garageForm(theme: theme, isCreate: true),
-            data: (garage) {
-              if (!_fieldsHydrated) {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (!mounted) return;
-                  setState(() {
-                    _garageNameController.text = garage.garageName;
-                    _addressController.text = garage.address;
-                    _opening = _parseTime(garage.openingTime);
-                    _closing = _parseTime(garage.closingTime);
-                    _fieldsHydrated = true;
-                  });
-                });
-              }
-              return _garageForm(
-                theme: theme,
-                isCreate: false,
-                garageId: garage.id,
-              );
-            },
-          ),
-          const SizedBox(height: 16),
-          GlassCard(
-            child: SwitchListTile(
-              title: const Text('Dark Mode'),
-              value: themeMode == AppThemeMode.dark,
-              onChanged: (enabled) {
-                ref.read(themeModeProvider.notifier).setDark(enabled);
-              },
+            Expanded(
+              child: ListView(
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  16,
+                  16,
+                  AppBottomNavBar.contentBottomPadding(context),
+                ),
+                children: [
+                  _sectionLabel(s.garageProfile, theme),
+                  garageAsync.when(
+                    loading: () => const Padding(
+                      padding: EdgeInsets.all(32),
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+                    error: (_, _) => _emptyGarageCard(s, theme),
+                    data: (garage) {
+                      if (!_fieldsHydrated || _hydratedGarageId != garage.id) {
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          if (!mounted) return;
+                          setState(() => _hydrateGarage(garage));
+                        });
+                      }
+                      return _garageProfileCard(garage, s, theme);
+                    },
+                  ),
+                  const SizedBox(height: 28),
+                  _sectionLabel(s.appSettings, theme),
+                  _settingsCard(
+                    children: [
+                      _settingsRow(
+                        iconBg: theme.colorScheme.primaryContainer.withValues(alpha: 0.35),
+                        iconColor: theme.colorScheme.primary,
+                        icon: Icons.translate,
+                        title: s.language,
+                        subtitle: s.languageSubtitle,
+                        onTap: _showLanguagePicker,
+                      ),
+                      Divider(height: 1, color: theme.colorScheme.outlineVariant.withValues(alpha: 0.35)),
+                      _settingsRow(
+                        iconBg: const Color(0xFFFFDF93),
+                        iconColor: const Color(0xFF765B00),
+                        icon: Icons.dark_mode_outlined,
+                        title: s.appearance,
+                        subtitle: s.appearanceSubtitle,
+                        trailing: Switch(
+                          value: themeMode == AppThemeMode.dark,
+                          onChanged: (enabled) {
+                            ref.read(themeModeProvider.notifier).setDark(enabled);
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 12, top: 8),
+                    child: Text(
+                      language.label,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 28),
+                  _sectionLabel(s.account, theme),
+                  _settingsCard(
+                    children: [
+                      _settingsRow(
+                        iconBg: theme.colorScheme.secondaryContainer,
+                        iconColor: theme.colorScheme.secondary,
+                        icon: Icons.badge_outlined,
+                        title: s.editProfile,
+                        onTap: _showEditProfileSheet,
+                      ),
+                      Divider(height: 1, color: theme.colorScheme.outlineVariant.withValues(alpha: 0.35)),
+                      _settingsRow(
+                        iconBg: theme.colorScheme.surfaceContainerHigh,
+                        iconColor: theme.colorScheme.onSurfaceVariant,
+                        icon: Icons.help_outline,
+                        title: s.supportFeedback,
+                        onTap: _showSupport,
+                      ),
+                      Divider(height: 1, color: theme.colorScheme.outlineVariant.withValues(alpha: 0.35)),
+                      _settingsRow(
+                        iconBg: theme.colorScheme.errorContainer.withValues(alpha: 0.5),
+                        iconColor: theme.colorScheme.error,
+                        icon: Icons.logout,
+                        title: s.logout,
+                        titleColor: theme.colorScheme.error,
+                        trailing: const SizedBox.shrink(),
+                        onTap: () async {
+                          await ref.read(authStateProvider.notifier).signOut();
+                          if (context.mounted) context.go('/login');
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  Center(
+                    child: Text(
+                      '${s.versionLabel} 1.0.0 (${s.buildLabel} 1)',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.outline,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-          OutlinedButton.icon(
-            onPressed: () async {
-              await ref.read(authStateProvider.notifier).signOut();
-              if (context.mounted) context.go('/login');
-            },
-            icon: const Icon(Icons.logout, color: Colors.red),
-            label: const Text('Sign Out', style: TextStyle(color: Colors.red)),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -371,6 +838,7 @@ class OwnerGarageSetupScreen extends ConsumerStatefulWidget {
 class _OwnerGarageSetupScreenState extends ConsumerState<OwnerGarageSetupScreen> {
   final _nameController = TextEditingController();
   final _addressController = TextEditingController();
+  final _serviceCostController = TextEditingController(text: '899');
   TimeOfDay _opening = const TimeOfDay(hour: 9, minute: 0);
   TimeOfDay _closing = const TimeOfDay(hour: 18, minute: 0);
   bool _loading = false;
@@ -395,6 +863,7 @@ class _OwnerGarageSetupScreenState extends ConsumerState<OwnerGarageSetupScreen>
   void dispose() {
     _nameController.dispose();
     _addressController.dispose();
+    _serviceCostController.dispose();
     super.dispose();
   }
 
@@ -402,12 +871,17 @@ class _OwnerGarageSetupScreenState extends ConsumerState<OwnerGarageSetupScreen>
       '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}:00';
 
   Future<void> _create() async {
+    final s = AppStrings.of(context);
     final name = _nameController.text.trim();
     final address = _addressController.text.trim();
+    final costRaw = _serviceCostController.text.trim().replaceAll(',', '');
+    final cost = double.tryParse(costRaw);
     if (name.isEmpty || address.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter garage name and address')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(s.enterGarageDetails)));
+      return;
+    }
+    if (cost == null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(s.enterValidAmount)));
       return;
     }
     setState(() => _loading = true);
@@ -417,6 +891,7 @@ class _OwnerGarageSetupScreenState extends ConsumerState<OwnerGarageSetupScreen>
         'address': address,
         'opening_time': _formatApiTime(_opening),
         'closing_time': _formatApiTime(_closing),
+        'default_service_cost': cost.toStringAsFixed(2),
       });
       ref.invalidate(myGarageProvider);
       ref.invalidate(garagesProvider);
@@ -433,6 +908,7 @@ class _OwnerGarageSetupScreenState extends ConsumerState<OwnerGarageSetupScreen>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final s = AppStrings.of(context);
 
     if (_checking) {
       return const Scaffold(
@@ -442,7 +918,7 @@ class _OwnerGarageSetupScreenState extends ConsumerState<OwnerGarageSetupScreen>
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Set Up Your Garage'),
+        title: Text(s.createYourGarage),
         automaticallyImplyLeading: false,
       ),
       body: SingleChildScrollView(
@@ -453,13 +929,13 @@ class _OwnerGarageSetupScreenState extends ConsumerState<OwnerGarageSetupScreen>
             Icon(Icons.garage, size: 64, color: theme.colorScheme.primary),
             const SizedBox(height: 16),
             Text(
-              'Create your garage to start receiving bookings',
+              s.setUpGarageCta,
               style: theme.textTheme.headlineMedium,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
-              'Customers will only see your garage after you create it here.',
+              s.createGarageHint,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -468,25 +944,39 @@ class _OwnerGarageSetupScreenState extends ConsumerState<OwnerGarageSetupScreen>
             const SizedBox(height: 32),
             TextField(
               controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'Garage Name',
+              decoration: InputDecoration(
+                labelText: s.garageName,
                 hintText: 'e.g. Raj Garage',
-                prefixIcon: Icon(Icons.store),
+                prefixIcon: const Icon(Icons.store),
               ),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: _addressController,
               maxLines: 3,
-              decoration: const InputDecoration(
-                labelText: 'Address',
+              decoration: InputDecoration(
+                labelText: s.address,
                 hintText: 'Full garage address',
-                prefixIcon: Icon(Icons.location_on),
+                prefixIcon: const Icon(Icons.location_on),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _serviceCostController,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+              ],
+              decoration: InputDecoration(
+                labelText: s.generalServiceAmount,
+                helperText: s.generalServiceHint,
+                prefixText: '₹ ',
+                prefixIcon: const Icon(Icons.payments_outlined),
               ),
             ),
             ListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text('Opening Time'),
+              title: Text(s.openingTime),
               subtitle: Text(_opening.format(context)),
               trailing: const Icon(Icons.access_time),
               onTap: () async {
@@ -496,7 +986,7 @@ class _OwnerGarageSetupScreenState extends ConsumerState<OwnerGarageSetupScreen>
             ),
             ListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text('Closing Time'),
+              title: Text(s.closingTime),
               subtitle: Text(_closing.format(context)),
               trailing: const Icon(Icons.access_time),
               onTap: () async {
@@ -513,11 +1003,11 @@ class _OwnerGarageSetupScreenState extends ConsumerState<OwnerGarageSetupScreen>
                       width: 24,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('Create Garage & Continue'),
+                  : Text(s.createGarage),
             ),
             TextButton(
               onPressed: () => context.go('/owner'),
-              child: const Text('Skip for now'),
+              child: Text(s.cancel),
             ),
           ],
         ),

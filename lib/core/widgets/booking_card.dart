@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/app_strings.dart';
 import '../../models/booking_model.dart';
 import '../utils/date_utils.dart';
-import '../utils/status_utils.dart';
 import 'glass_card.dart';
 import 'status_chip.dart';
 
@@ -21,11 +21,13 @@ class BookingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final s = AppStrings.of(context);
+    final locale = Localizations.localeOf(context).toString();
     final vehicle = booking.vehicleDetail;
     final customer = booking.customerDetail;
     final dateTimeText =
-        '${AppDateUtils.formatDisplayDate(AppDateUtils.parseApiDate(booking.bookingDate))} · ${AppDateUtils.formatTime(booking.timeSlot)}';
-    final serviceLabel = StatusUtils.serviceLabel(booking.serviceType);
+        '${AppDateUtils.formatDisplayDate(AppDateUtils.parseApiDate(booking.bookingDate), locale: locale)} · ${AppDateUtils.formatTime(booking.timeSlot, locale: locale)}';
+    final serviceLabel = s.serviceType(booking.serviceType);
 
     return GlassCard(
       onTap: onTap,
@@ -39,7 +41,7 @@ class BookingCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      vehicle?.displayName ?? 'Vehicle',
+                      vehicle?.displayName ?? s.vehicleLabel,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.titleLarge?.copyWith(

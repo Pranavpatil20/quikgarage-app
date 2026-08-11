@@ -7,7 +7,9 @@ import '../../../../core/providers/booking_provider.dart';
 import '../../../../core/providers/garage_provider.dart';
 import '../../../../core/providers/vehicle_provider.dart';
 import '../../../../core/utils/date_utils.dart';
+import '../../../../core/widgets/app_overlays.dart';
 import '../../../../core/widgets/glass_card.dart';
+import '../../../../l10n/app_strings.dart';
 import '../../../../models/garage_model.dart';
 import '../../../../models/vehicle_model.dart';
 import '../../../../repositories/booking_repository.dart';
@@ -70,17 +72,14 @@ class _BookServiceScreenState extends ConsumerState<BookServiceScreen> {
     });
   }
 
-  String? _validationMessage() {
-    if (_selectedVehicleId == null) return 'Please select a vehicle';
-    if (_selectedGarageId == null) {
-      return 'Please select a garage (or ask an owner to create one)';
-    }
-    if (_selectedSlot == null) return 'Please select a time slot';
+  String? _validationMessage(AppStrings s) {
+    if (_selectedVehicleId == null) return s.pleaseSelectVehicle;
+    if (_selectedGarageId == null) return s.pleaseSelectGarage;
+    if (_selectedSlot == null) return s.pleaseSelectTimeSlot;
     return null;
   }
 
   String _normalizeTimeSlot(String slot) {
-    // API may return "09:00" or "09:00:00"
     final parts = slot.split(':');
     if (parts.length >= 3) return slot;
     if (parts.length == 2) return '$slot:00';
@@ -88,7 +87,8 @@ class _BookServiceScreenState extends ConsumerState<BookServiceScreen> {
   }
 
   Future<void> _book() async {
-    final error = _validationMessage();
+    final s = AppStrings.of(context);
+    final error = _validationMessage(s);
     if (error != null) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
       return;
@@ -105,7 +105,7 @@ class _BookServiceScreenState extends ConsumerState<BookServiceScreen> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Booking confirmed!')),
+          SnackBar(content: Text(s.bookingConfirmed)),
         );
         context.go('/customer');
       }
@@ -123,6 +123,8 @@ class _BookServiceScreenState extends ConsumerState<BookServiceScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final s = AppStrings.of(context);
+    final locale = Localizations.localeOf(context).toString();
     final vehiclesAsync = ref.watch(vehiclesProvider);
     final garagesAsync = ref.watch(garagesProvider);
     final slotsAsync = _selectedGarageId != null
@@ -136,7 +138,7 @@ class _BookServiceScreenState extends ConsumerState<BookServiceScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Book Service'),
+        title: Text(s.bookService),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
@@ -156,11 +158,11 @@ class _BookServiceScreenState extends ConsumerState<BookServiceScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Select Vehicle', style: theme.textTheme.headlineMedium),
+                Text(s.selectVehicle, style: theme.textTheme.headlineMedium),
                 TextButton.icon(
                   onPressed: () => _showAddVehicle(context),
                   icon: const Icon(Icons.add, size: 18),
-                  label: const Text('Add New'),
+                  label: Text(s.addNew),
                 ),
               ],
             ),
@@ -177,7 +179,7 @@ class _BookServiceScreenState extends ConsumerState<BookServiceScreen> {
                 if (vehicles.isEmpty) {
                   return GlassCard(
                     child: Text(
-                      'No vehicles yet. Tap Add New to add one.',
+                      s.noVehiclesYetAdd,
                       style: theme.textTheme.bodyMedium,
                     ),
                   );
@@ -187,7 +189,7 @@ class _BookServiceScreenState extends ConsumerState<BookServiceScreen> {
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     itemCount: vehicles.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 12),
+                    separatorBuilder: (_, _) => const SizedBox(width: 12),
                     itemBuilder: (_, i) {
                       final v = vehicles[i];
                       final selected = _selectedVehicleId == v.id;
@@ -237,7 +239,7 @@ class _BookServiceScreenState extends ConsumerState<BookServiceScreen> {
               },
             ),
             const SizedBox(height: 24),
-            Text('Select Garage', style: theme.textTheme.headlineMedium),
+            Text(s.selectGarage, style: theme.textTheme.headlineMedium),
             const SizedBox(height: 12),
             garagesAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
@@ -251,7 +253,7 @@ class _BookServiceScreenState extends ConsumerState<BookServiceScreen> {
                 if (garages.isEmpty) {
                   return GlassCard(
                     child: Text(
-                      'No garages available yet. An owner must create a garage first.',
+                      s.noGaragesAvailable,
                       style: theme.textTheme.bodyMedium,
                     ),
                   );
@@ -301,25 +303,27 @@ class _BookServiceScreenState extends ConsumerState<BookServiceScreen> {
               },
             ),
             const SizedBox(height: 24),
-            Text('Service Type', style: theme.textTheme.headlineMedium),
+            Text(s.serviceTypeLabel, style: theme.textTheme.headlineMedium),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: AppConstants.serviceTypes.map((s) {
-                final selected = _serviceType == s;
+              children: AppConstants.serviceTypes.map((type) {
+                final selected = _serviceType == type;
                 return FilterChip(
-                  label: Text(AppConstants.serviceTypeLabels[s] ?? s),
+                  label: Text(s.serviceType(type)),
                   selected: selected,
-                  onSelected: (_) => setState(() => _serviceType = s),
+                  onSelected: (_) => setState(() => _serviceType = type),
                 );
               }).toList(),
             ),
             const SizedBox(height: 24),
             ListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text('Select Date'),
-              subtitle: Text(AppDateUtils.formatDisplayDate(_selectedDate)),
+              title: Text(s.selectDate),
+              subtitle: Text(
+                AppDateUtils.formatDisplayDate(_selectedDate, locale: locale),
+              ),
               trailing: const Icon(Icons.calendar_today),
               onTap: () async {
                 final picked = await showDatePicker(
@@ -337,11 +341,11 @@ class _BookServiceScreenState extends ConsumerState<BookServiceScreen> {
               },
             ),
             const SizedBox(height: 8),
-            Text('Time Slots', style: theme.textTheme.headlineMedium),
+            Text(s.timeSlots, style: theme.textTheme.headlineMedium),
             const SizedBox(height: 12),
             if (_selectedGarageId == null)
               Text(
-                'Select a garage to see available time slots.',
+                s.selectGarageForSlots,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -352,7 +356,7 @@ class _BookServiceScreenState extends ConsumerState<BookServiceScreen> {
                 error: (e, _) => Text(e.toString()),
                 data: (slots) {
                   if (slots.slots.isEmpty) {
-                    return const Text('No slots for this date.');
+                    return Text(s.noSlotsForDate);
                   }
                   return Wrap(
                     spacing: 8,
@@ -360,7 +364,9 @@ class _BookServiceScreenState extends ConsumerState<BookServiceScreen> {
                     children: slots.slots.map((slot) {
                       final selected = _selectedSlot == slot.time;
                       return FilterChip(
-                        label: Text(AppDateUtils.formatTime(slot.time)),
+                        label: Text(
+                          AppDateUtils.formatTime(slot.time, locale: locale),
+                        ),
                         selected: selected,
                         onSelected: slot.available
                             ? (_) => setState(() => _selectedSlot = slot.time)
@@ -378,9 +384,9 @@ class _BookServiceScreenState extends ConsumerState<BookServiceScreen> {
             TextField(
               controller: _notesController,
               maxLines: 3,
-              decoration: const InputDecoration(
-                labelText: 'Additional Notes',
-                hintText: 'Describe any issues...',
+              decoration: InputDecoration(
+                labelText: s.additionalNotes,
+                hintText: s.notesHint,
               ),
             ),
             const SizedBox(height: 32),
@@ -392,7 +398,7 @@ class _BookServiceScreenState extends ConsumerState<BookServiceScreen> {
                       width: 24,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('Confirm Booking'),
+                  : Text(s.confirmBooking),
             ),
             const SizedBox(height: 24),
           ],
@@ -402,11 +408,13 @@ class _BookServiceScreenState extends ConsumerState<BookServiceScreen> {
   }
 
   void _showAddVehicle(BuildContext context) {
+    final s = AppStrings.of(context);
     final numberController = TextEditingController();
     final modelController = TextEditingController();
-    showModalBottomSheet(
+    showAppModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      showDragHandle: true,
       builder: (ctx) => Padding(
         padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
         child: Padding(
@@ -416,12 +424,12 @@ class _BookServiceScreenState extends ConsumerState<BookServiceScreen> {
             children: [
               TextField(
                 controller: numberController,
-                decoration: const InputDecoration(labelText: 'Vehicle Number'),
+                decoration: InputDecoration(labelText: s.vehicleNumber),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: modelController,
-                decoration: const InputDecoration(labelText: 'Make / Model'),
+                decoration: InputDecoration(labelText: s.makeModel),
               ),
               const SizedBox(height: 24),
               ElevatedButton(
@@ -444,7 +452,7 @@ class _BookServiceScreenState extends ConsumerState<BookServiceScreen> {
                   }
                   if (ctx.mounted) Navigator.pop(ctx);
                 },
-                child: const Text('Add Vehicle'),
+                child: Text(s.addVehicle),
               ),
             ],
           ),

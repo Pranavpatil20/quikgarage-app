@@ -30,22 +30,47 @@ class ErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.error_outline, size: 48, color: Theme.of(context).colorScheme.error),
-            const SizedBox(height: 16),
-            Text(message, textAlign: TextAlign.center),
-            if (onRetry != null) ...[
+    final theme = Theme.of(context);
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final content = Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
               const SizedBox(height: 16),
-              ElevatedButton(onPressed: onRetry, child: const Text('Retry')),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyMedium,
+              ),
+              if (onRetry != null) ...[
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: onRetry,
+                  child: const Text('Retry'),
+                ),
+              ],
             ],
-          ],
-        ),
-      ),
+          ),
+        );
+
+        // Prevent overflow inside tight parents (e.g. SliverFillRemaining).
+        if (constraints.hasBoundedHeight) {
+          return Center(
+            child: SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: Center(child: content),
+              ),
+            ),
+          );
+        }
+
+        return Center(child: content);
+      },
     );
   }
 }

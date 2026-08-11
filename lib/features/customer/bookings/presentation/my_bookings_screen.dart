@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/providers/booking_provider.dart';
+import '../../../../core/widgets/app_overlays.dart';
 import '../../../../core/widgets/booking_card.dart';
 import '../../../../core/widgets/loading_view.dart';
-import '../../../../core/widgets/loading_view.dart';
 import '../../../../core/widgets/segmented_tabs.dart';
+import '../../../../l10n/app_strings.dart';
 import '../../../../repositories/booking_repository.dart';
 
 class MyBookingsScreen extends ConsumerStatefulWidget {
@@ -17,25 +18,26 @@ class MyBookingsScreen extends ConsumerStatefulWidget {
 
 class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
   int _tabIndex = 0;
-  static const _tabs = ['Active', 'Completed', 'Cancelled'];
   static const _statusFilters = [null, 'completed', 'cancelled'];
 
   @override
   Widget build(BuildContext context) {
     final status = _statusFilters[_tabIndex];
     final bookingsAsync = ref.watch(customerBookingsProvider(status));
+    final s = AppStrings.of(context);
+    final tabs = [s.tabActive, s.tabCompleted, s.tabCancelled];
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Bookings'),
+        title: Text(s.myBookings),
         automaticallyImplyLeading: false,
       ),
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: SegmentedTabs(
-              tabs: _tabs,
+              tabs: tabs,
               selectedIndex: _tabIndex,
               onChanged: (i) => setState(() => _tabIndex = i),
             ),
@@ -55,12 +57,12 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
                       .toList();
                 }
                 if (filtered.isEmpty) {
-                  return const Center(child: Text('No bookings found'));
+                  return Center(child: Text(s.noBookingsFound));
                 }
                 return ListView.separated(
                   padding: const EdgeInsets.all(16),
                   itemCount: filtered.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  separatorBuilder: (_, _) => const SizedBox(height: 12),
                   itemBuilder: (context, index) {
                     final booking = filtered[index];
                     return BookingCard(
@@ -68,7 +70,7 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
                       trailing: booking.canCancel
                           ? TextButton(
                               onPressed: () => _cancel(booking.id),
-                              child: const Text('Cancel'),
+                              child: Text(s.cancel),
                             )
                           : null,
                     );
@@ -83,14 +85,15 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
   }
 
   Future<void> _cancel(int id) async {
-    final confirmed = await showDialog<bool>(
+    final s = AppStrings.of(context);
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Cancel Booking'),
-        content: const Text('Are you sure you want to cancel this booking?'),
+        title: Text(s.cancel),
+        content: Text(s.cancelBookingConfirm),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('No')),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Yes')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(s.no)),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(s.yes)),
         ],
       ),
     );

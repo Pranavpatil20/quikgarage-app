@@ -25,8 +25,11 @@ class BookingCard extends StatelessWidget {
     final locale = Localizations.localeOf(context).toString();
     final vehicle = booking.vehicleDetail;
     final customer = booking.customerDetail;
-    final dateTimeText =
-        '${AppDateUtils.formatDisplayDate(AppDateUtils.parseApiDate(booking.bookingDate), locale: locale)} · ${AppDateUtils.formatTime(booking.timeSlot, locale: locale)}';
+    final dateTimeText = AppDateUtils.formatBookingDateTime(
+      booking.bookingDate,
+      booking.timeSlot,
+      locale: locale,
+    );
     final serviceLabel = s.serviceType(booking.serviceType);
 
     return GlassCard(
@@ -35,6 +38,7 @@ class BookingCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: Column(
@@ -69,37 +73,47 @@ class BookingCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              Flexible(child: StatusChip(status: booking.status)),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Icon(Icons.schedule, size: 16, color: theme.colorScheme.onSurfaceVariant),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Text(
-                  dateTimeText,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodyMedium,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Text(
-                  serviceLabel,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.end,
-                  style: theme.textTheme.labelSmall,
-                ),
-              ),
+              StatusChip(status: booking.status),
               if (trailing != null) ...[
                 const SizedBox(width: 4),
                 trailing!,
               ],
             ],
+          ),
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.secondaryContainer.withValues(alpha: 0.45),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.event_available, size: 18, color: theme.colorScheme.primary),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    dateTimeText,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            serviceLabel,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
           ),
         ],
       ),

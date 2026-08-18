@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../theme/app_colors.dart';
+
 /// Production-style filter chips: single-line labels, horizontal scroll.
 /// First chip stays left-aligned (no empty left gap). Later chips scroll
 /// toward center so previous/next remain tappable.
@@ -104,7 +106,7 @@ class _SegmentedTabsState extends State<SegmentedTabs> {
           return KeyedSubtree(
             key: _itemKeys[index],
             child: Material(
-              color: selected ? scheme.primary : scheme.surfaceContainerHighest,
+              color: selected ? AppColors.brandGreen : scheme.surfaceContainerHighest,
               elevation: selected ? 1 : 0,
               shadowColor: scheme.primary.withValues(alpha: 0.25),
               borderRadius: BorderRadius.circular(22),

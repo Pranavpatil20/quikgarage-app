@@ -6,6 +6,7 @@ import '../../../../core/providers/booking_provider.dart';
 import '../../../../core/providers/dashboard_provider.dart';
 import '../../../../core/providers/invoice_provider.dart';
 import '../../../../core/utils/date_utils.dart';
+import '../../../../core/widgets/app_bottom_nav_bar.dart';
 import '../../../../core/widgets/app_overlays.dart';
 import '../../../../core/widgets/booking_card.dart';
 import '../../../../core/widgets/loading_view.dart';
@@ -13,6 +14,7 @@ import '../../../../core/widgets/segmented_tabs.dart';
 import '../../../../l10n/app_strings.dart';
 import '../../../../models/booking_model.dart';
 import '../../../../repositories/booking_repository.dart';
+import '../../../../theme/app_colors.dart';
 
 class OwnerBookingsScreen extends ConsumerStatefulWidget {
   const OwnerBookingsScreen({super.key});
@@ -67,7 +69,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
               loading: () => const LoadingView(),
               error: (e, _) => ErrorView(
                 message: e.toString(),
-                onRetry: () => ref.invalidate(ownerBookingsProvider),
+                onRetry: () => refreshBookings(ref),
               ),
               data: (bookings) {
                 var filtered = bookings;
@@ -76,18 +78,28 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                       .where((b) => b.bookingDate == today && b.status != 'cancelled')
                       .toList();
                 } else if (_tabIndex == 1) {
+                  // Keep In Progress visible so owners can mark Completed.
                   filtered = bookings
-                      .where((b) =>
-                          b.status == 'pending' || b.status == 'confirmed')
+                      .where(
+                        (b) =>
+                            b.status == 'pending' ||
+                            b.status == 'confirmed' ||
+                            b.status == 'in_progress',
+                      )
                       .toList();
                 }
                 if (filtered.isEmpty) {
                   return Center(child: Text(s.noBookingsFound));
                 }
                 return RefreshIndicator(
-                  onRefresh: () async => ref.invalidate(ownerBookingsProvider),
+                  onRefresh: () async => refreshBookings(ref),
                   child: ListView.separated(
-                    padding: const EdgeInsets.all(16),
+                    padding: EdgeInsets.fromLTRB(
+                      16,
+                      16,
+                      16,
+                      AppBottomNavBar.contentBottomPadding(context),
+                    ),
                     itemCount: filtered.length,
                     separatorBuilder: (_, _) => const SizedBox(height: 12),
                     itemBuilder: (context, index) {
@@ -99,31 +111,8 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                                 booking.status == 'cancelled'
                             ? null
                             : PopupMenuButton<String>(
-                                onSelected: (value) => _updateStatus(booking.id, value),
-                                itemBuilder: (_) {
-                                  final items = <PopupMenuItem<String>>[];
-                                  switch (booking.status) {
-                                    case 'pending':
-                                      items.addAll([
-                                        PopupMenuItem(value: 'confirmed', child: Text(s.confirm)),
-                                        PopupMenuItem(value: 'in_progress', child: Text(s.bookingStatus('in_progress'))),
-                                        PopupMenuItem(value: 'completed', child: Text(s.complete)),
-                                        PopupMenuItem(value: 'cancelled', child: Text(s.cancel)),
-                                      ]);
-                                    case 'confirmed':
-                                      items.addAll([
-                                        PopupMenuItem(value: 'in_progress', child: Text(s.bookingStatus('in_progress'))),
-                                        PopupMenuItem(value: 'completed', child: Text(s.complete)),
-                                        PopupMenuItem(value: 'cancelled', child: Text(s.cancel)),
-                                      ]);
-                                    case 'in_progress':
-                                      items.addAll([
-                                        PopupMenuItem(value: 'completed', child: Text(s.complete)),
-                                        PopupMenuItem(value: 'cancelled', child: Text(s.cancel)),
-                                      ]);
-                                  }
-                                  return items;
-                                },
+                                onSelected: (value) => _updateStatus(booking, value),
+                                itemBuilder: (_) => _menuItems(s, booking.status),
                               ),
                       );
                     },
@@ -137,27 +126,54 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     );
   }
 
+  List<PopupMenuItem<String>> _menuItems(AppStrings s, String status) {
+    switch (status) {
+      case 'pending':
+        return [
+          PopupMenuItem(value: 'confirmed', child: Text(s.confirm)),
+          PopupMenuItem(value: 'in_progress', child: Text(s.bookingStatus('in_progress'))),
+          PopupMenuItem(value: 'completed', child: Text(s.complete)),
+          PopupMenuItem(value: 'cancelled', child: Text(s.cancel)),
+        ];
+      case 'confirmed':
+        return [
+          PopupMenuItem(value: 'in_progress', child: Text(s.bookingStatus('in_progress'))),
+          PopupMenuItem(value: 'completed', child: Text(s.complete)),
+          PopupMenuItem(value: 'cancelled', child: Text(s.cancel)),
+        ];
+      case 'in_progress':
+        return [
+          PopupMenuItem(value: 'completed', child: Text(s.complete)),
+          PopupMenuItem(value: 'cancelled', child: Text(s.cancel)),
+        ];
+      default:
+        return [];
+    }
+  }
+
   void _showStatusSheet(BuildContext context, BookingModel booking) {
     final s = AppStrings.of(context);
-    final actions = <({String value, String label})>[];
+    final theme = Theme.of(context);
+    final actions = <({String value, String label, IconData icon, Color? color})>[];
+
     switch (booking.status) {
       case 'pending':
         actions.addAll([
-          (value: 'confirmed', label: s.markConfirmed),
-          (value: 'in_progress', label: s.markInProgress),
-          (value: 'completed', label: s.markCompleted),
-          (value: 'cancelled', label: s.cancel),
+          (value: 'confirmed', label: s.markConfirmed, icon: Icons.check_circle_outline, color: null),
+          (value: 'in_progress', label: s.markInProgress, icon: Icons.play_circle_outline, color: null),
+          (value: 'completed', label: s.markCompleted, icon: Icons.task_alt, color: AppColors.brandGreen),
+          (value: 'cancelled', label: s.cancel, icon: Icons.cancel_outlined, color: theme.colorScheme.error),
         ]);
       case 'confirmed':
         actions.addAll([
-          (value: 'in_progress', label: s.markInProgress),
-          (value: 'completed', label: s.markCompleted),
-          (value: 'cancelled', label: s.cancel),
+          (value: 'in_progress', label: s.markInProgress, icon: Icons.play_circle_outline, color: null),
+          (value: 'completed', label: s.markCompleted, icon: Icons.task_alt, color: AppColors.brandGreen),
+          (value: 'cancelled', label: s.cancel, icon: Icons.cancel_outlined, color: theme.colorScheme.error),
         ]);
       case 'in_progress':
         actions.addAll([
-          (value: 'completed', label: s.markCompleted),
-          (value: 'cancelled', label: s.cancel),
+          (value: 'completed', label: s.markCompleted, icon: Icons.task_alt, color: AppColors.brandGreen),
+          (value: 'cancelled', label: s.cancel, icon: Icons.cancel_outlined, color: theme.colorScheme.error),
         ]);
       default:
         break;
@@ -179,12 +195,26 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                child: Text(
+                  '${s.bookingStatus(booking.status)} · Update status',
+                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                ),
+              ),
               for (final action in actions)
                 ListTile(
-                  title: Text(action.label),
+                  leading: Icon(action.icon, color: action.color ?? theme.colorScheme.primary),
+                  title: Text(
+                    action.label,
+                    style: TextStyle(
+                      color: action.color,
+                      fontWeight: action.value == 'completed' ? FontWeight.w700 : FontWeight.w500,
+                    ),
+                  ),
                   onTap: () {
                     Navigator.pop(ctx);
-                    _updateStatus(booking.id, action.value);
+                    _updateStatus(booking, action.value);
                   },
                 ),
             ],
@@ -194,13 +224,24 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     );
   }
 
-  Future<void> _updateStatus(int id, String status) async {
+  Future<void> _updateStatus(BookingModel booking, String status) async {
     final s = AppStrings.of(context);
     try {
-      await ref.read(bookingRepositoryProvider).updateStatus(id, status);
-      ref.invalidate(ownerBookingsProvider);
+      await ref.read(bookingRepositoryProvider).updateStatus(booking.id, status);
+      refreshBookings(ref);
       ref.invalidate(dashboardMetricsProvider);
       ref.invalidate(invoicesProvider);
+
+      // If Completed/Cancelled, jump to that tab so the change is obvious.
+      if (status == 'completed' && mounted) {
+        setState(() => _tabIndex = 2);
+      } else if (status == 'cancelled' && mounted) {
+        setState(() => _tabIndex = 3);
+      } else if (status == 'in_progress' && mounted && _tabIndex == 1) {
+        // Stay on Upcoming — in_progress remains visible there.
+        setState(() {});
+      }
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('${s.statusUpdated}: ${s.bookingStatus(status)}')),
@@ -208,7 +249,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
       }
     }
   }

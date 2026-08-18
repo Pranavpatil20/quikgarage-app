@@ -3,8 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/providers/booking_provider.dart';
+import '../../../../core/providers/customer_provider.dart';
+import '../../../../core/providers/dashboard_provider.dart';
 import '../../../../core/providers/garage_provider.dart';
 import '../../../../core/utils/date_utils.dart';
+import '../../../../models/garage_model.dart';
 import '../../../../repositories/booking_repository.dart';
 
 class AddBookingScreen extends ConsumerStatefulWidget {
@@ -21,8 +25,10 @@ class _AddBookingScreenState extends ConsumerState<AddBookingScreen> {
   final _notesController = TextEditingController();
   String _serviceType = 'general_service';
   DateTime _date = DateTime.now();
-  TimeOfDay _time = const TimeOfDay(hour: 9, minute: 0);
+  TimeOfDay _time = AppDateUtils.nextAvailableTime();
   bool _loading = false;
+
+  bool get _isPastSelection => !AppDateUtils.isDateTimeInFuture(_date, _time);
 
   @override
   void dispose() {
@@ -33,17 +39,86 @@ class _AddBookingScreenState extends ConsumerState<AddBookingScreen> {
     super.dispose();
   }
 
-  Future<void> _submit(int garageId) async {
-    if (_phoneController.text.isEmpty || _vehicleController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Phone and vehicle number required')),
-      );
+  TimeOfDay _openTime(GarageModel garage) =>
+      AppDateUtils.parseTimeOfDay(garage.openingTime) ??
+      const TimeOfDay(hour: 9, minute: 0);
+
+  TimeOfDay _closeTime(GarageModel garage) =>
+      AppDateUtils.parseTimeOfDay(garage.closingTime) ??
+      const TimeOfDay(hour: 18, minute: 0);
+
+  String _hoursMessage(GarageModel garage) {
+    final open = _openTime(garage);
+    final close = _closeTime(garage);
+    return 'Booking time must be between ${AppDateUtils.formatHoursRange(open, close)}.';
+  }
+
+  bool _isWithinHours(GarageModel garage, TimeOfDay time) {
+    return AppDateUtils.isWithinGarageHours(
+      time,
+      open: _openTime(garage),
+      close: _closeTime(garage),
+    );
+  }
+
+  void _showMessage(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<void> _pickDate(GarageModel garage) async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _date.isBefore(now) ? now : _date,
+      firstDate: DateTime(now.year, now.month, now.day),
+      lastDate: now.add(const Duration(days: 90)),
+    );
+    if (picked == null) return;
+    setState(() {
+      _date = picked;
+      if (!AppDateUtils.isDateTimeInFuture(_date, _time) || !_isWithinHours(garage, _time)) {
+        var next = AppDateUtils.nextAvailableTime(forDate: _date);
+        if (!_isWithinHours(garage, next)) {
+          next = _openTime(garage);
+        }
+        _time = next;
+      }
+    });
+  }
+
+  Future<void> _pickTime(GarageModel garage) async {
+    final picked = await showTimePicker(context: context, initialTime: _time);
+    if (picked == null) return;
+    if (!AppDateUtils.isDateTimeInFuture(_date, picked)) {
+      _showMessage('Please select a future time for today');
       return;
     }
+    if (!_isWithinHours(garage, picked)) {
+      _showMessage(_hoursMessage(garage));
+      return;
+    }
+    setState(() => _time = picked);
+  }
+
+  Future<void> _submit(GarageModel garage) async {
+    if (_phoneController.text.isEmpty || _vehicleController.text.isEmpty) {
+      _showMessage('Phone and vehicle number required');
+      return;
+    }
+    if (_isPastSelection) {
+      _showMessage('Cannot create a booking in the past');
+      return;
+    }
+    if (!_isWithinHours(garage, _time)) {
+      _showMessage(_hoursMessage(garage));
+      return;
+    }
+
     setState(() => _loading = true);
     try {
       await ref.read(bookingRepositoryProvider).createOwnerBooking({
-        'garage': garageId,
+        'garage': garage.id,
         'customer_phone': _phoneController.text.trim(),
         'vehicle_number': _vehicleController.text.trim().toUpperCase(),
         'make_model': _makeModelController.text.trim(),
@@ -53,16 +128,15 @@ class _AddBookingScreenState extends ConsumerState<AddBookingScreen> {
             '${_time.hour.toString().padLeft(2, '0')}:${_time.minute.toString().padLeft(2, '0')}:00',
         'notes': _notesController.text.trim(),
       });
+      refreshBookings(ref);
+      ref.invalidate(customersProvider);
+      ref.invalidate(dashboardMetricsProvider);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Booking created')),
-        );
+        _showMessage('Booking created');
         context.pop();
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
-      }
+      _showMessage('$e');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -82,7 +156,7 @@ class _AddBookingScreenState extends ConsumerState<AddBookingScreen> {
       ),
       body: garageAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, __) => Center(
+        error: (_, _) => Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Column(
@@ -148,7 +222,7 @@ class _AddBookingScreenState extends ConsumerState<AddBookingScreen> {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                value: _serviceType,
+                initialValue: _serviceType,
                 dropdownColor: theme.colorScheme.surfaceContainerHighest,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurface,
@@ -181,26 +255,24 @@ class _AddBookingScreenState extends ConsumerState<AddBookingScreen> {
                 title: const Text('Booking Date'),
                 subtitle: Text(AppDateUtils.formatDisplayDate(_date)),
                 trailing: const Icon(Icons.calendar_today),
-                onTap: () async {
-                  final picked = await showDatePicker(
-                    context: context,
-                    initialDate: _date,
-                    firstDate: DateTime.now(),
-                    lastDate: DateTime.now().add(const Duration(days: 90)),
-                  );
-                  if (picked != null) setState(() => _date = picked);
-                },
+                onTap: () => _pickDate(garage),
               ),
               ListTile(
                 title: const Text('Time Slot'),
                 subtitle: Text(_time.format(context)),
                 trailing: const Icon(Icons.access_time),
-                onTap: () async {
-                  final picked = await showTimePicker(context: context, initialTime: _time);
-                  if (picked != null) setState(() => _time = picked);
-                },
+                onTap: () => _pickTime(garage),
               ),
-              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
+                child: Text(
+                  'Garage hours: ${garage.formattedHours}',
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
               TextField(
                 controller: _notesController,
                 maxLines: 3,
@@ -211,7 +283,7 @@ class _AddBookingScreenState extends ConsumerState<AddBookingScreen> {
               ),
               const SizedBox(height: 32),
               ElevatedButton(
-                onPressed: _loading ? null : () => _submit(garage.id),
+                onPressed: _loading ? null : () => _submit(garage),
                 child: _loading
                     ? const SizedBox(
                         height: 24,

@@ -4,7 +4,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/providers/auth_provider.dart';
 import '../../../../core/providers/booking_provider.dart';
+import '../../../../core/widgets/app_bottom_nav_bar.dart';
+import '../../../../core/widgets/app_logo.dart';
 import '../../../../core/widgets/booking_card.dart';
+import '../../../../core/widgets/brand_header.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/widgets/status_chip.dart';
 import '../../../../l10n/app_strings.dart';
@@ -31,39 +34,36 @@ class CustomerHomeScreen extends ConsumerWidget {
     );
 
     return Scaffold(
-      body: SafeArea(
-        bottom: false,
-        child: RefreshIndicator(
-          onRefresh: () async => ref.invalidate(customerBookingsProvider),
-          child: CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        backgroundColor: theme.colorScheme.primaryContainer,
-                        child: Icon(Icons.person, color: theme.colorScheme.primary),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Text(
-                          s.customerHi(user?.name ?? ''),
-                          style: theme.textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: theme.colorScheme.primary,
-                          ),
+      body: RefreshIndicator(
+        onRefresh: () async => ref.invalidate(customerBookingsProvider),
+        child: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: BrandHeader(
+                child: Row(
+                  children: [
+                    const AppLogo(size: 32),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        s.customerHi(user?.name ?? ''),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.onYellow,
                         ),
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.notifications_outlined),
-                        onPressed: () => context.push('/customer/notifications'),
-                      ),
-                    ],
-                  ),
+                    ),
+                    IconButton(
+                      visualDensity: VisualDensity.compact,
+                      icon: const Icon(Icons.notifications_outlined, color: AppColors.onYellow),
+                      onPressed: () => context.push('/customer/notifications'),
+                    ),
+                  ],
                 ),
               ),
+            ),
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
@@ -141,10 +141,10 @@ class CustomerHomeScreen extends ConsumerWidget {
                                   icon: const Icon(Icons.arrow_forward),
                                   label: Text(s.bookService),
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.white,
-                                    foregroundColor: AppColors.primary,
+                                    backgroundColor: AppColors.brandYellow,
+                                    foregroundColor: AppColors.onYellow,
                                     disabledForegroundColor:
-                                        AppColors.primary.withValues(alpha: 0.6),
+                                        AppColors.onYellow.withValues(alpha: 0.6),
                                   ),
                                 ),
                               ],
@@ -254,11 +254,12 @@ class CustomerHomeScreen extends ConsumerWidget {
                   ),
                 ),
               ),
-              const SliverToBoxAdapter(child: SizedBox(height: 100)),
+              SliverToBoxAdapter(
+                child: SizedBox(height: AppBottomNavBar.contentBottomPadding(context)),
+              ),
             ],
           ),
         ),
-      ),
     );
   }
 }

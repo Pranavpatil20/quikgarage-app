@@ -3,8 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/constants/app_constants.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../../../core/widgets/app_logo.dart';
 import '../../../theme/app_colors.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -30,9 +30,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   String _formatError(Object e) {
     final msg = e.toString();
-    if (msg.contains('Connection') || msg.contains('SocketException')) {
-      return 'Cannot reach the API server.\n\n'
-          'First request on free Render can take ~50s after sleep.';
+    if (msg.contains('receiveTimeout') ||
+        msg.contains('took longer than') ||
+        msg.contains('Connection') ||
+        msg.contains('SocketException') ||
+        msg.contains('waking up')) {
+      return 'Server is waking up (first request can take ~1 min).\n\n'
+          'Please tap Sign In again.';
     }
     return msg
         .replaceFirst('Exception: ', '')
@@ -87,22 +91,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: AppColors.splashPrimary,
+      backgroundColor: AppColors.brandYellow,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 48),
-              const Icon(Icons.precision_manufacturing, color: Colors.white, size: 64),
+              const SizedBox(height: 32),
+              const Center(child: AppLogo(size: 84)),
               const SizedBox(height: 16),
               Text(
-                AppConstants.appName,
+                'QuikGarage',
                 textAlign: TextAlign.center,
                 style: theme.textTheme.headlineLarge?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
+                  color: AppColors.onYellow,
+                  fontWeight: FontWeight.w800,
                 ),
               ),
               const SizedBox(height: 8),
@@ -110,7 +114,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 'Sign in with your phone & password',
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: Colors.white70,
+                  color: AppColors.onYellow.withValues(alpha: 0.72),
                 ),
               ),
               const SizedBox(height: 40),
@@ -156,7 +160,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ? const SizedBox(
                                 height: 24,
                                 width: 24,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
                               )
                             : const Text('Sign In'),
                       ),

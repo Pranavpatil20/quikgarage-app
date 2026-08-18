@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/providers/invoice_provider.dart';
+import '../../../../core/widgets/app_bottom_nav_bar.dart';
 import '../../../../core/widgets/app_overlays.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/widgets/loading_view.dart';
@@ -75,7 +76,12 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
                 return RefreshIndicator(
                   onRefresh: () async => ref.invalidate(invoicesProvider),
                   child: ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                    padding: EdgeInsets.fromLTRB(
+                      16,
+                      16,
+                      16,
+                      AppBottomNavBar.contentBottomPadding(context),
+                    ),
                     itemCount: invoices.length,
                     separatorBuilder: (_, _) => const SizedBox(height: 12),
                     itemBuilder: (context, index) {

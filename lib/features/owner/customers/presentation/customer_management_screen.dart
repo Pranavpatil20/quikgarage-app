@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/providers/customer_provider.dart';
+import '../../../../core/utils/date_utils.dart';
+import '../../../../core/widgets/app_bottom_nav_bar.dart';
 import '../../../../core/widgets/booking_card.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/widgets/loading_view.dart';
@@ -13,7 +15,14 @@ import '../../../../repositories/booking_repository.dart';
 
 final customerHistoryProvider =
     FutureProvider.autoDispose.family<List<BookingModel>, int>((ref, customerId) async {
-  return ref.watch(bookingRepositoryProvider).getOwnerBookings(customerId: customerId);
+  // Prefer server filter; fall back to client filter if pagination/filter is incomplete.
+  final filtered = await ref.watch(bookingRepositoryProvider).getOwnerBookings(
+        customerId: customerId,
+      );
+  if (filtered.isNotEmpty) return filtered;
+
+  final all = await ref.watch(bookingRepositoryProvider).getOwnerBookings();
+  return all.where((b) => b.customer == customerId).toList();
 });
 
 class CustomerManagementScreen extends ConsumerWidget {
@@ -43,14 +52,22 @@ class CustomerManagementScreen extends ConsumerWidget {
           return RefreshIndicator(
             onRefresh: () async => ref.invalidate(customersProvider),
             child: ListView.builder(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.fromLTRB(
+                16,
+                16,
+                16,
+                AppBottomNavBar.contentBottomPadding(context),
+              ),
               itemCount: customers.length,
               itemBuilder: (context, index) {
                 final customer = customers[index];
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: GlassCard(
-                    onTap: () => context.push('/owner/customers/${customer.id}', extra: customer),
+                    onTap: () => context.push(
+                      '/owner/customers/${customer.id}',
+                      extra: customer,
+                    ),
                     child: Row(
                       children: [
                         CircleAvatar(
@@ -118,6 +135,7 @@ class CustomerHistoryScreen extends ConsumerWidget {
     final historyAsync = ref.watch(customerHistoryProvider(customerId));
     final theme = Theme.of(context);
     final s = AppStrings.of(context);
+    final locale = Localizations.localeOf(context).toString();
     final titleName = customer?.name.isNotEmpty == true
         ? customer!.name
         : (customer?.phone ?? s.customerLabel);
@@ -144,35 +162,42 @@ class CustomerHistoryScreen extends ConsumerWidget {
             onRefresh: () async =>
                 ref.invalidate(customerHistoryProvider(customerId)),
             child: ListView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
               children: [
-                if (customer != null) ...[
-                  GlassCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(s.customerLabel, style: theme.textTheme.headlineMedium),
-                        const SizedBox(height: 8),
-                        Text(customer!.name.isNotEmpty ? customer!.name : '—'),
+                GlassCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(s.customerLabel, style: theme.textTheme.titleMedium),
+                      const SizedBox(height: 8),
+                      Text(
+                        customer?.name.isNotEmpty == true
+                            ? customer!.name
+                            : titleName,
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      if (customer?.phone != null)
                         Text(
                           customer!.phone,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          '${bookings.length} ${s.bookings.toLowerCase()}',
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: theme.colorScheme.primary,
-                          ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '${bookings.length} ${s.bookings.toLowerCase()}',
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w600,
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 16),
-                ],
-                Text(s.serviceHistory, style: theme.textTheme.headlineMedium),
+                ),
+                const SizedBox(height: 20),
+                Text(s.serviceHistory, style: theme.textTheme.titleLarge),
                 const SizedBox(height: 12),
                 ...bookings.map((booking) {
                   return Padding(
@@ -181,11 +206,19 @@ class CustomerHistoryScreen extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         BookingCard(booking: booking),
+                        const SizedBox(height: 6),
                         Padding(
-                          padding: const EdgeInsets.only(left: 8, top: 4),
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
                           child: Text(
-                            '${s.serviceCost}: ${s.serviceType(booking.serviceType)}'
-                            '${booking.notes.isNotEmpty ? ' · ${booking.notes}' : ''}',
+                            [
+                              AppDateUtils.formatBookingDateTime(
+                                booking.bookingDate,
+                                booking.timeSlot,
+                                locale: locale,
+                              ),
+                              s.serviceType(booking.serviceType),
+                              if (booking.notes.isNotEmpty) booking.notes,
+                            ].join(' · '),
                             style: theme.textTheme.labelSmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),

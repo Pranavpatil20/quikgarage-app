@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/providers/booking_provider.dart';
+import '../../../../core/widgets/app_bottom_nav_bar.dart';
 import '../../../../core/widgets/app_overlays.dart';
 import '../../../../core/widgets/booking_card.dart';
 import '../../../../core/widgets/loading_view.dart';
@@ -60,7 +61,12 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
                   return Center(child: Text(s.noBookingsFound));
                 }
                 return ListView.separated(
-                  padding: const EdgeInsets.all(16),
+                  padding: EdgeInsets.fromLTRB(
+                    16,
+                    16,
+                    16,
+                    AppBottomNavBar.contentBottomPadding(context),
+                  ),
                   itemCount: filtered.length,
                   separatorBuilder: (_, _) => const SizedBox(height: 12),
                   itemBuilder: (context, index) {
@@ -100,7 +106,7 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
     if (confirmed != true) return;
     try {
       await ref.read(bookingRepositoryProvider).cancelBooking(id);
-      ref.invalidate(customerBookingsProvider);
+      refreshBookings(ref);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));

@@ -1,5 +1,5 @@
 class AppConstants {
-  static const String appName = 'quikgarage';
+  static const String appName = 'QuikGarage';
   static const String tagline = 'Fast. Reliable. Hassle-Free Vehicle Service';
   static const String accessTokenKey = 'access_token';
   static const String refreshTokenKey = 'refresh_token';

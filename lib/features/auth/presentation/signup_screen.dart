@@ -40,9 +40,13 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
 
   String _formatError(Object e) {
     final msg = e.toString();
-    if (msg.contains('Connection') || msg.contains('SocketException')) {
-      return 'Cannot reach the API server.\n\n'
-          'First request on free Render can take ~50s after sleep.';
+    if (msg.contains('receiveTimeout') ||
+        msg.contains('took longer than') ||
+        msg.contains('Connection') ||
+        msg.contains('SocketException') ||
+        msg.contains('waking up')) {
+      return 'Server is waking up (first request can take ~1 min).\n\n'
+          'Please tap Submit again — it usually works on the second try.';
     }
     return msg
         .replaceFirst('Exception: ', '')
@@ -120,7 +124,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     final isOwner = _selectedRole == 'owner';
 
     return Scaffold(
-      backgroundColor: AppColors.splashPrimary,
+      backgroundColor: AppColors.brandYellow,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -132,15 +136,17 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                 'Create account',
                 textAlign: TextAlign.center,
                 style: theme.textTheme.headlineLarge?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
+                  color: AppColors.onYellow,
+                  fontWeight: FontWeight.w800,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 AppConstants.appName,
                 textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white70),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: AppColors.onYellow.withValues(alpha: 0.72),
+                ),
               ),
               const SizedBox(height: 24),
               Card(
@@ -237,7 +243,10 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                             ? const SizedBox(
                                 height: 24,
                                 width: 24,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
                               )
                             : const Text('Submit'),
                       ),

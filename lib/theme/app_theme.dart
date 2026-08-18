@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'app_colors.dart';
 import 'app_typography.dart';
@@ -84,8 +85,8 @@ abstract final class AppTheme {
       cardColor: AppColors.darkSurface,
       cardBorder: AppColors.darkOutlineVariant,
       inputFill: AppColors.darkSurface,
-      buttonBg: AppColors.primaryContainer,
-      buttonFg: AppColors.onPrimary,
+      buttonBg: AppColors.brandYellow,
+      buttonFg: AppColors.onYellow,
       navBg: AppColors.darkSurface,
       navIndicator: AppColors.darkSurfaceHigh,
     );
@@ -115,9 +116,42 @@ abstract final class AppTheme {
       appBarTheme: AppBarTheme(
         elevation: 0,
         scrolledUnderElevation: 0,
-        backgroundColor: scaffoldBackground,
-        foregroundColor: scheme.primary,
-        titleTextStyle: textTheme.headlineMedium?.copyWith(color: scheme.primary),
+        backgroundColor: AppColors.brandYellow,
+        foregroundColor: AppColors.onYellow,
+        systemOverlayStyle: SystemUiOverlayStyle.dark,
+        titleTextStyle: textTheme.titleLarge?.copyWith(
+          color: AppColors.onYellow,
+          fontWeight: FontWeight.w700,
+        ),
+        toolbarHeight: 56,
+        iconTheme: const IconThemeData(color: AppColors.onYellow),
+      ),
+      chipTheme: ChipThemeData(
+        selectedColor: AppColors.brandGreen,
+        backgroundColor: scheme.surfaceContainerHighest,
+        labelStyle: textTheme.labelLarge,
+        secondaryLabelStyle: textTheme.labelLarge?.copyWith(color: Colors.white),
+        side: BorderSide.none,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+      ),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return AppColors.onPrimary;
+          return scheme.onSurfaceVariant;
+        }),
+        trackColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return AppColors.brandGreen;
+          return scheme.surfaceContainerHighest;
+        }),
+      ),
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: brightness == Brightness.dark
+            ? AppColors.brandYellow
+            : AppColors.brandGreen,
+      ),
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: AppColors.brandGreen,
+        foregroundColor: Colors.white,
       ),
       cardTheme: CardThemeData(
         elevation: 0,
@@ -165,6 +199,20 @@ abstract final class AppTheme {
           foregroundColor: buttonFg,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: brightness == Brightness.dark
+              ? AppColors.brandYellow
+              : AppColors.brandGreen,
+        ),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          backgroundColor: AppColors.brandGreen,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(

@@ -6,12 +6,15 @@ import '../../../../core/providers/auth_provider.dart';
 import '../../../../core/providers/dashboard_provider.dart';
 import '../../../../core/providers/garage_provider.dart';
 import '../../../../core/widgets/app_bottom_nav_bar.dart';
+import '../../../../core/widgets/app_logo.dart';
 import '../../../../core/widgets/booking_card.dart';
+import '../../../../core/widgets/brand_header.dart';
 import '../../../../core/widgets/loading_view.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/widgets/metric_card.dart';
 import '../../../../core/widgets/quick_action_button.dart';
 import '../../../../l10n/app_strings.dart';
+import '../../../../theme/app_colors.dart';
 
 class OwnerDashboardScreen extends ConsumerWidget {
   const OwnerDashboardScreen({super.key});
@@ -25,54 +28,52 @@ class OwnerDashboardScreen extends ConsumerWidget {
     final s = AppStrings.of(context);
 
     return Scaffold(
-      body: SafeArea(
-        bottom: false,
-        child: RefreshIndicator(
-          onRefresh: () async {
-            ref.invalidate(dashboardMetricsProvider);
-            ref.invalidate(myGarageProvider);
-          },
-          child: CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 20,
-                        backgroundColor: theme.colorScheme.primaryContainer,
-                        child: Icon(Icons.person, color: theme.colorScheme.primary),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              s.greeting(user?.name ?? ''),
-                              style: theme.textTheme.headlineMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: theme.colorScheme.primary,
-                              ),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          ref.invalidate(dashboardMetricsProvider);
+          ref.invalidate(myGarageProvider);
+        },
+        child: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: BrandHeader(
+                child: Row(
+                  children: [
+                    const AppLogo(size: 32),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            s.greeting(user?.name ?? ''),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.onYellow,
                             ),
-                            Text(
-                              s.manageServicesToday,
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
+                          ),
+                          Text(
+                            s.manageServicesToday,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: AppColors.onYellow.withValues(alpha: 0.7),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.notifications_outlined),
-                        onPressed: () => context.push('/owner/notifications'),
-                      ),
-                    ],
-                  ),
+                    ),
+                    IconButton(
+                      visualDensity: VisualDensity.compact,
+                      icon: const Icon(Icons.notifications_outlined, color: AppColors.onYellow),
+                      onPressed: () => context.push('/owner/notifications'),
+                    ),
+                  ],
                 ),
               ),
+            ),
               if (garageAsync.hasError)
                 SliverToBoxAdapter(
                   child: Padding(
@@ -298,7 +299,6 @@ class OwnerDashboardScreen extends ConsumerWidget {
             ],
           ),
         ),
-      ),
     );
   }
 }

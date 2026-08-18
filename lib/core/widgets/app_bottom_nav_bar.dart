@@ -46,8 +46,8 @@ class AppBottomNavBar extends StatelessWidget {
     final muted = isDark
         ? AppColors.darkOnSurfaceVariant
         : AppColors.onSurfaceVariant.withValues(alpha: 0.75);
-    final selectedFg = isDark ? AppColors.darkBackground : Colors.white;
-    final selectedBg = isDark ? AppColors.darkPrimary : AppColors.primary;
+    final selectedFg = isDark ? AppColors.onYellow : Colors.white;
+    final selectedBg = isDark ? AppColors.brandYellow : AppColors.brandGreen;
 
     // No Material / no full-width colored SafeArea — only the inset pill paints.
     return Padding(

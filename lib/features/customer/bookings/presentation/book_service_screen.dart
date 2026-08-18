@@ -86,11 +86,28 @@ class _BookServiceScreenState extends ConsumerState<BookServiceScreen> {
     return slot;
   }
 
+  bool _isSlotInPast(String slotTime) {
+    final parts = slotTime.split(':');
+    if (parts.length < 2) return false;
+    final hour = int.tryParse(parts[0]) ?? 0;
+    final minute = int.tryParse(parts[1].split('.').first) ?? 0;
+    return !AppDateUtils.isDateTimeInFuture(
+      _selectedDate,
+      TimeOfDay(hour: hour, minute: minute),
+    );
+  }
+
   Future<void> _book() async {
     final s = AppStrings.of(context);
     final error = _validationMessage(s);
     if (error != null) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+      return;
+    }
+    if (_isSlotInPast(_selectedSlot!)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a future time for today')),
+      );
       return;
     }
     setState(() => _loading = true);
@@ -103,6 +120,7 @@ class _BookServiceScreenState extends ConsumerState<BookServiceScreen> {
         'time_slot': _normalizeTimeSlot(_selectedSlot!),
         'notes': _notesController.text.trim(),
       });
+      refreshBookings(ref);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(s.bookingConfirmed)),
@@ -112,7 +130,7 @@ class _BookServiceScreenState extends ConsumerState<BookServiceScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
+          SnackBar(content: Text('$e')),
         );
       }
     } finally {
@@ -326,11 +344,12 @@ class _BookServiceScreenState extends ConsumerState<BookServiceScreen> {
               ),
               trailing: const Icon(Icons.calendar_today),
               onTap: () async {
+                final now = DateTime.now();
                 final picked = await showDatePicker(
                   context: context,
-                  initialDate: _selectedDate,
-                  firstDate: DateTime.now(),
-                  lastDate: DateTime.now().add(const Duration(days: 60)),
+                  initialDate: _selectedDate.isBefore(now) ? now : _selectedDate,
+                  firstDate: DateTime(now.year, now.month, now.day),
+                  lastDate: now.add(const Duration(days: 60)),
                 );
                 if (picked != null) {
                   setState(() {
@@ -355,13 +374,17 @@ class _BookServiceScreenState extends ConsumerState<BookServiceScreen> {
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (e, _) => Text(e.toString()),
                 data: (slots) {
-                  if (slots.slots.isEmpty) {
+                  final visible = slots.slots.where((slot) {
+                    // Keep past slots out of the picker for today.
+                    return !_isSlotInPast(slot.time);
+                  }).toList();
+                  if (visible.isEmpty) {
                     return Text(s.noSlotsForDate);
                   }
                   return Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: slots.slots.map((slot) {
+                    children: visible.map((slot) {
                       final selected = _selectedSlot == slot.time;
                       return FilterChip(
                         label: Text(

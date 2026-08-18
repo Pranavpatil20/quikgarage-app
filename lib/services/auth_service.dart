@@ -45,6 +45,12 @@ class AuthService {
 
   String _apiErrorMessage(Object e, {String fallback = 'Request failed'}) {
     if (e is DioException) {
+      if (e.type == DioExceptionType.connectionError ||
+          e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.receiveTimeout ||
+          e.type == DioExceptionType.sendTimeout) {
+        return 'Server is waking up. Please wait a few seconds and try again.';
+      }
       final data = e.response?.data;
       if (data is Map) {
         final detail = data['detail'];

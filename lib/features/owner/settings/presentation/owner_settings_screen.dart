@@ -7,8 +7,11 @@ import '../../../../core/providers/auth_provider.dart';
 import '../../../../core/providers/garage_provider.dart';
 import '../../../../core/providers/locale_provider.dart';
 import '../../../../core/widgets/app_bottom_nav_bar.dart';
+import '../../../../core/widgets/app_logo.dart';
 import '../../../../core/widgets/app_overlays.dart';
+import '../../../../core/widgets/brand_header.dart';
 import '../../../../l10n/app_strings.dart';
+import '../../../../theme/app_colors.dart';
 import '../../../../models/garage_model.dart';
 import '../../../../repositories/garage_repository.dart';
 import '../../../../repositories/user_repository.dart';
@@ -680,38 +683,38 @@ class _OwnerSettingsScreenState extends ConsumerState<OwnerSettingsScreen> {
     }
 
     return Scaffold(
-      body: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
-              child: Row(
-                children: [
-                  Text(
-                    s.appName,
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      color: theme.colorScheme.primary,
+      body: Column(
+        children: [
+          BrandHeader(
+            child: Row(
+              children: [
+                const AppLogo(size: 32),
+                const SizedBox(width: 10),
+                Text(
+                  s.appName,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    color: AppColors.onYellow,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const Spacer(),
+                CircleAvatar(
+                  radius: 16,
+                  backgroundColor: AppColors.brandGreen.withValues(alpha: 0.18),
+                  child: Text(
+                    (user?.name.isNotEmpty == true)
+                        ? user!.name.trim()[0].toUpperCase()
+                        : '?',
+                    style: const TextStyle(
+                      color: AppColors.brandGreenDark,
                       fontWeight: FontWeight.w700,
+                      fontSize: 13,
                     ),
                   ),
-                  const Spacer(),
-                  CircleAvatar(
-                    radius: 20,
-                    backgroundColor: theme.colorScheme.surfaceContainerHigh,
-                    child: Text(
-                      (user?.name.isNotEmpty == true)
-                          ? user!.name.trim()[0].toUpperCase()
-                          : '?',
-                      style: TextStyle(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
+          ),
             Expanded(
               child: ListView(
                 padding: EdgeInsets.fromLTRB(
@@ -823,7 +826,6 @@ class _OwnerSettingsScreenState extends ConsumerState<OwnerSettingsScreen> {
             ),
           ],
         ),
-      ),
     );
   }
 }

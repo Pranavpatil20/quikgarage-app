@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/providers/notification_provider.dart';
+import '../../../../core/widgets/app_bottom_nav_bar.dart';
 import '../../../../core/widgets/loading_view.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../l10n/app_strings.dart';
@@ -50,7 +51,12 @@ class NotificationsScreen extends ConsumerWidget {
             return Center(child: Text(s.noNotifications));
           }
           return ListView.separated(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.fromLTRB(
+              16,
+              16,
+              16,
+              isOwner ? 16 : AppBottomNavBar.contentBottomPadding(context),
+            ),
             itemCount: notifications.length,
             separatorBuilder: (_, _) => const SizedBox(height: 12),
             itemBuilder: (context, index) {

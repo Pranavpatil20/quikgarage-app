@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../theme/app_colors.dart';
+
 class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
   const AppTopBar({
     super.key,
@@ -38,14 +40,14 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
                   title!,
                   style: theme.textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.primary,
+                    color: AppColors.onYellow,
                   ),
                 ),
                 if (subtitle != null)
                   Text(
                     subtitle!,
                     style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+                      color: AppColors.onYellow.withValues(alpha: 0.7),
                     ),
                   ),
               ],

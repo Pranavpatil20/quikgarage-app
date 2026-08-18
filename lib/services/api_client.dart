@@ -17,8 +17,10 @@ class ApiClient {
     dio = Dio(
       BaseOptions(
         baseUrl: ApiConstants.baseUrl,
-        connectTimeout: const Duration(seconds: 30),
-        receiveTimeout: const Duration(seconds: 30),
+        // Free Render cold-starts can take 50–70s on the first request.
+        connectTimeout: const Duration(seconds: 90),
+        receiveTimeout: const Duration(seconds: 90),
+        sendTimeout: const Duration(seconds: 90),
         headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
       ),
     );
@@ -74,15 +76,39 @@ class ApiClient {
 
   static AppException mapError(DioException e) {
     if (e.type == DioExceptionType.connectionError ||
-        e.type == DioExceptionType.connectionTimeout) {
-      return const NetworkException();
+        e.type == DioExceptionType.connectionTimeout ||
+        e.type == DioExceptionType.receiveTimeout ||
+        e.type == DioExceptionType.sendTimeout) {
+      return const NetworkException(
+        'Server is waking up. Please wait a few seconds and try again.',
+      );
     }
     final data = e.response?.data;
     if (data is Map) {
-      final detail = data['detail'] ?? data.values.first;
+      final detail = data['detail'];
+      if (detail is String && detail.trim().isNotEmpty) {
+        return ServerException(detail, statusCode: e.response?.statusCode);
+      }
+      final parts = <String>[];
+      data.forEach((key, value) {
+        if (key == 'detail') return;
+        if (value is List && value.isNotEmpty) {
+          parts.add(value.first.toString());
+        } else if (value is String && value.trim().isNotEmpty) {
+          parts.add(value);
+        }
+      });
+      if (parts.isNotEmpty) {
+        return ServerException(
+          parts.join('\n'),
+          statusCode: e.response?.statusCode,
+        );
+      }
+    }
+    if (e.response?.statusCode == 400) {
       return ServerException(
-        detail.toString(),
-        statusCode: e.response?.statusCode,
+        'Please check your booking details and try again.',
+        statusCode: 400,
       );
     }
     return ServerException(e.message ?? 'Request failed');

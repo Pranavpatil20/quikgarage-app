@@ -10,6 +10,7 @@ import '../../../../core/widgets/app_overlays.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../l10n/app_strings.dart';
 import '../../../../repositories/user_repository.dart';
+import '../../../../core/widgets/mic_text_field.dart';
 import '../../../../repositories/vehicle_repository.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -167,7 +168,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           GlassCard(
             child: Column(
               children: [
-                TextField(
+                MicTextField(
                   controller: _nameController,
                   decoration: InputDecoration(labelText: s.name),
                 ),
@@ -367,7 +368,7 @@ class _AddVehicleSheetState extends State<_AddVehicleSheet> {
           children: [
             Text(s.addVehicle, style: theme.textTheme.titleLarge),
             const SizedBox(height: 16),
-            TextField(
+            MicTextField(
               controller: _numberController,
               textCapitalization: TextCapitalization.characters,
               decoration: InputDecoration(
@@ -376,7 +377,7 @@ class _AddVehicleSheetState extends State<_AddVehicleSheet> {
               ),
             ),
             const SizedBox(height: 12),
-            TextField(
+            MicTextField(
               controller: _modelController,
               decoration: InputDecoration(
                 labelText: s.makeModel,

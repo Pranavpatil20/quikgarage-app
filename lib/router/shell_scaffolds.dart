@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../core/providers/notification_provider.dart';
 import '../core/widgets/app_bottom_nav_bar.dart';
 import '../l10n/app_strings.dart';
 
@@ -137,7 +138,8 @@ class CustomerShell extends ConsumerWidget {
   int get _index {
     if (location.startsWith('/customer/bookings')) return 1;
     if (location.startsWith('/customer/notifications')) return 2;
-    if (location.startsWith('/customer/profile')) return 3;
+    if (location.startsWith('/customer/support')) return 3;
+    if (location.startsWith('/customer/profile')) return 4;
     return 0;
   }
 
@@ -148,6 +150,7 @@ class CustomerShell extends ConsumerWidget {
     return location == '/customer' ||
         location == '/customer/bookings' ||
         location == '/customer/notifications' ||
+        location == '/customer/support' ||
         location == '/customer/profile';
   }
 
@@ -186,7 +189,7 @@ class CustomerShell extends ConsumerWidget {
               Align(
                 alignment: Alignment.bottomCenter,
                 child: AppBottomNavBar(
-                  selectedIndex: _index.clamp(0, 3),
+                  selectedIndex: _index.clamp(0, 4),
                   onSelected: (index) {
                     switch (index) {
                       case 0:
@@ -196,6 +199,8 @@ class CustomerShell extends ConsumerWidget {
                       case 2:
                         context.go('/customer/notifications');
                       case 3:
+                        context.go('/customer/support');
+                      case 4:
                         context.go('/customer/profile');
                     }
                   },
@@ -214,6 +219,12 @@ class CustomerShell extends ConsumerWidget {
                       icon: Icons.notifications_outlined,
                       selectedIcon: Icons.notifications_rounded,
                       label: s.alerts,
+                      badgeCount: ref.watch(unreadCountProvider),
+                    ),
+                    AppBottomNavItem(
+                      icon: Icons.support_agent_outlined,
+                      selectedIcon: Icons.support_agent,
+                      label: s.support,
                     ),
                     AppBottomNavItem(
                       icon: Icons.person_outline_rounded,

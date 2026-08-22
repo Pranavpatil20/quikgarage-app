@@ -6,6 +6,7 @@ import '../../../../core/providers/booking_provider.dart';
 import '../../../../core/providers/dashboard_provider.dart';
 import '../../../../core/providers/invoice_provider.dart';
 import '../../../../core/utils/date_utils.dart';
+import '../../../../core/utils/whatsapp_share.dart';
 import '../../../../core/widgets/app_bottom_nav_bar.dart';
 import '../../../../core/widgets/app_overlays.dart';
 import '../../../../core/widgets/booking_card.dart';
@@ -107,6 +108,15 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                       return BookingCard(
                         booking: booking,
                         onTap: () => _showStatusSheet(context, booking),
+                        onWhatsApp: () => WhatsAppShare.send(
+                          context: context,
+                          phone: booking.customerDetail?.phone,
+                          message: WhatsAppShare.bookingMessage(
+                            booking,
+                            s,
+                            locale: Localizations.localeOf(context).toString(),
+                          ),
+                        ),
                         trailing: booking.status == 'completed' ||
                                 booking.status == 'cancelled'
                             ? null
@@ -201,6 +211,23 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                   '${s.bookingStatus(booking.status)} · Update status',
                   style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
                 ),
+              ),
+              ListTile(
+                leading: Icon(Icons.chat, color: theme.colorScheme.primary),
+                title: Text(s.sendWhatsAppDetails),
+                subtitle: Text(booking.customerDetail?.phone ?? ''),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  WhatsAppShare.send(
+                    context: context,
+                    phone: booking.customerDetail?.phone,
+                    message: WhatsAppShare.bookingMessage(
+                      booking,
+                      s,
+                      locale: Localizations.localeOf(context).toString(),
+                    ),
+                  );
+                },
               ),
               for (final action in actions)
                 ListTile(

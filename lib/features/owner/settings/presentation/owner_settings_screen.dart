@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/constants/support_contact.dart';
 import '../../../../core/providers/auth_provider.dart';
 import '../../../../core/providers/garage_provider.dart';
 import '../../../../core/providers/locale_provider.dart';
@@ -10,9 +11,11 @@ import '../../../../core/widgets/app_bottom_nav_bar.dart';
 import '../../../../core/widgets/app_logo.dart';
 import '../../../../core/widgets/app_overlays.dart';
 import '../../../../core/widgets/brand_header.dart';
+import '../../../../core/widgets/support_contact_card.dart';
 import '../../../../l10n/app_strings.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../models/garage_model.dart';
+import '../../../../core/widgets/mic_text_field.dart';
 import '../../../../repositories/garage_repository.dart';
 import '../../../../repositories/user_repository.dart';
 
@@ -250,7 +253,7 @@ class _OwnerSettingsScreenState extends ConsumerState<OwnerSettingsScreen> {
             children: [
               Text(s.editProfile, style: theme.textTheme.titleLarge),
               const SizedBox(height: 16),
-              TextField(
+              MicTextField(
                 controller: _nameController,
                 decoration: InputDecoration(
                   labelText: s.yourName,
@@ -337,7 +340,7 @@ class _OwnerSettingsScreenState extends ConsumerState<OwnerSettingsScreen> {
                       ),
                     ],
                     const SizedBox(height: 16),
-                    TextField(
+                    MicTextField(
                       controller: _garageNameController,
                       decoration: InputDecoration(
                         labelText: s.garageName,
@@ -345,7 +348,7 @@ class _OwnerSettingsScreenState extends ConsumerState<OwnerSettingsScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    TextField(
+                    MicTextField(
                       controller: _addressController,
                       maxLines: 2,
                       decoration: InputDecoration(
@@ -420,13 +423,20 @@ class _OwnerSettingsScreenState extends ConsumerState<OwnerSettingsScreen> {
     final s = AppStrings.of(context);
     showAppDialog<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(s.supportFeedback),
-        content: Text(s.supportMessage),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(s.cancel)),
-        ],
-      ),
+      builder: (ctx) {
+        final width = MediaQuery.sizeOf(ctx).width;
+        return AlertDialog(
+          insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+          title: Text(s.supportFeedback),
+          content: SizedBox(
+            width: width,
+            child: const SingleChildScrollView(child: SupportContactCard()),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(s.cancel)),
+          ],
+        );
+      },
     );
   }
 
@@ -815,7 +825,7 @@ class _OwnerSettingsScreenState extends ConsumerState<OwnerSettingsScreen> {
                   const SizedBox(height: 24),
                   Center(
                     child: Text(
-                      '${s.versionLabel} 1.0.0 (${s.buildLabel} 1)',
+                      '${s.versionLabel} ${SupportContact.appVersion}',
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: theme.colorScheme.outline,
                       ),
@@ -944,7 +954,7 @@ class _OwnerGarageSetupScreenState extends ConsumerState<OwnerGarageSetupScreen>
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 32),
-            TextField(
+            MicTextField(
               controller: _nameController,
               decoration: InputDecoration(
                 labelText: s.garageName,
@@ -953,7 +963,7 @@ class _OwnerGarageSetupScreenState extends ConsumerState<OwnerGarageSetupScreen>
               ),
             ),
             const SizedBox(height: 16),
-            TextField(
+            MicTextField(
               controller: _addressController,
               maxLines: 3,
               decoration: InputDecoration(

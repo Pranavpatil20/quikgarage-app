@@ -13,6 +13,7 @@ import '../../../../l10n/app_strings.dart';
 import '../../../../models/garage_model.dart';
 import '../../../../models/vehicle_model.dart';
 import '../../../../repositories/booking_repository.dart';
+import '../../../../core/widgets/mic_text_field.dart';
 import '../../../../repositories/vehicle_repository.dart';
 
 class BookServiceScreen extends ConsumerStatefulWidget {
@@ -404,7 +405,7 @@ class _BookServiceScreenState extends ConsumerState<BookServiceScreen> {
                 },
               ),
             const SizedBox(height: 16),
-            TextField(
+            MicTextField(
               controller: _notesController,
               maxLines: 3,
               decoration: InputDecoration(
@@ -445,12 +446,13 @@ class _BookServiceScreenState extends ConsumerState<BookServiceScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(
+              MicTextField(
                 controller: numberController,
                 decoration: InputDecoration(labelText: s.vehicleNumber),
+                textCapitalization: TextCapitalization.characters,
               ),
               const SizedBox(height: 16),
-              TextField(
+              MicTextField(
                 controller: modelController,
                 decoration: InputDecoration(labelText: s.makeModel),
               ),

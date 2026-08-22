@@ -23,8 +23,9 @@ class BookingModel with _$BookingModel {
     @Default('') String notes,
     @Default('pending') String status,
     @JsonKey(name: 'can_cancel') @Default(false) bool canCancel,
-    DateTime? createdAt,
-    DateTime? updatedAt,
+    @JsonKey(name: 'completed_at') DateTime? completedAt,
+    @JsonKey(name: 'created_at') DateTime? createdAt,
+    @JsonKey(name: 'updated_at') DateTime? updatedAt,
   }) = _BookingModel;
 
   factory BookingModel.fromJson(Map<String, dynamic> json) =>

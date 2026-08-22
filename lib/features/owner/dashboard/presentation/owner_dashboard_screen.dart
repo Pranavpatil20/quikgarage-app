@@ -5,10 +5,13 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/providers/auth_provider.dart';
 import '../../../../core/providers/dashboard_provider.dart';
 import '../../../../core/providers/garage_provider.dart';
+import '../../../../core/providers/notification_provider.dart';
 import '../../../../core/widgets/app_bottom_nav_bar.dart';
 import '../../../../core/widgets/app_logo.dart';
+import '../../../../core/widgets/bike_service_carousel.dart';
 import '../../../../core/widgets/booking_card.dart';
 import '../../../../core/widgets/brand_header.dart';
+import '../../../../core/widgets/notification_bell_button.dart';
 import '../../../../core/widgets/loading_view.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/widgets/metric_card.dart';
@@ -32,6 +35,7 @@ class OwnerDashboardScreen extends ConsumerWidget {
         onRefresh: () async {
           ref.invalidate(dashboardMetricsProvider);
           ref.invalidate(myGarageProvider);
+          ref.invalidate(notificationsProvider);
         },
         child: CustomScrollView(
           slivers: [
@@ -65,13 +69,17 @@ class OwnerDashboardScreen extends ConsumerWidget {
                         ],
                       ),
                     ),
-                    IconButton(
-                      visualDensity: VisualDensity.compact,
-                      icon: const Icon(Icons.notifications_outlined, color: AppColors.onYellow),
+                    NotificationBellButton(
                       onPressed: () => context.push('/owner/notifications'),
                     ),
                   ],
                 ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: const Padding(
+                padding: EdgeInsets.fromLTRB(16, 16, 16, 0),
+                child: BikeServiceCarousel.owner(),
               ),
             ),
               if (garageAsync.hasError)

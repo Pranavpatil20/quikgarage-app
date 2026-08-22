@@ -9,6 +9,7 @@ import '../../../../core/providers/dashboard_provider.dart';
 import '../../../../core/providers/garage_provider.dart';
 import '../../../../core/utils/date_utils.dart';
 import '../../../../models/garage_model.dart';
+import '../../../../core/widgets/mic_text_field.dart';
 import '../../../../repositories/booking_repository.dart';
 
 class AddBookingScreen extends ConsumerStatefulWidget {
@@ -205,15 +206,16 @@ class _AddBookingScreenState extends ConsumerState<AddBookingScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              TextField(
+              MicTextField(
                 controller: _vehicleController,
+                textCapitalization: TextCapitalization.characters,
                 decoration: const InputDecoration(
                   labelText: 'Vehicle Number',
                   prefixIcon: Icon(Icons.directions_car),
                 ),
               ),
               const SizedBox(height: 16),
-              TextField(
+              MicTextField(
                 controller: _makeModelController,
                 decoration: const InputDecoration(
                   labelText: 'Make / Model',
@@ -273,7 +275,7 @@ class _AddBookingScreenState extends ConsumerState<AddBookingScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              TextField(
+              MicTextField(
                 controller: _notesController,
                 maxLines: 3,
                 decoration: const InputDecoration(

@@ -12,7 +12,9 @@ _$BookingModelImpl _$$BookingModelImplFromJson(Map<String, dynamic> json) =>
       customer: (json['customer'] as num?)?.toInt(),
       customerDetail: json['customer_detail'] == null
           ? null
-          : UserModel.fromJson(json['customer_detail'] as Map<String, dynamic>),
+          : UserModel.fromJson(
+              json['customer_detail'] as Map<String, dynamic>,
+            ),
       garage: (json['garage'] as num?)?.toInt(),
       garageDetail: json['garage_detail'] == null
           ? null
@@ -29,31 +31,35 @@ _$BookingModelImpl _$$BookingModelImplFromJson(Map<String, dynamic> json) =>
       notes: json['notes'] as String? ?? '',
       status: json['status'] as String? ?? 'pending',
       canCancel: json['can_cancel'] as bool? ?? false,
-      createdAt: json['createdAt'] == null
+      completedAt: json['completed_at'] == null
           ? null
-          : DateTime.parse(json['createdAt'] as String),
-      updatedAt: json['updatedAt'] == null
+          : DateTime.parse(json['completed_at'] as String),
+      createdAt: json['created_at'] == null
           ? null
-          : DateTime.parse(json['updatedAt'] as String),
+          : DateTime.parse(json['created_at'] as String),
+      updatedAt: json['updated_at'] == null
+          ? null
+          : DateTime.parse(json['updated_at'] as String),
     );
 
 Map<String, dynamic> _$$BookingModelImplToJson(_$BookingModelImpl instance) =>
     <String, dynamic>{
       'id': instance.id,
       'customer': instance.customer,
-      'customer_detail': instance.customerDetail,
+      'customer_detail': instance.customerDetail?.toJson(),
       'garage': instance.garage,
-      'garage_detail': instance.garageDetail,
+      'garage_detail': instance.garageDetail?.toJson(),
       'vehicle': instance.vehicle,
-      'vehicle_detail': instance.vehicleDetail,
+      'vehicle_detail': instance.vehicleDetail?.toJson(),
       'service_type': instance.serviceType,
       'booking_date': instance.bookingDate,
       'time_slot': instance.timeSlot,
       'notes': instance.notes,
       'status': instance.status,
       'can_cancel': instance.canCancel,
-      'createdAt': instance.createdAt?.toIso8601String(),
-      'updatedAt': instance.updatedAt?.toIso8601String(),
+      'completed_at': instance.completedAt?.toIso8601String(),
+      'created_at': instance.createdAt?.toIso8601String(),
+      'updated_at': instance.updatedAt?.toIso8601String(),
     };
 
 _$TimeSlotModelImpl _$$TimeSlotModelImplFromJson(Map<String, dynamic> json) =>
@@ -63,7 +69,10 @@ _$TimeSlotModelImpl _$$TimeSlotModelImplFromJson(Map<String, dynamic> json) =>
     );
 
 Map<String, dynamic> _$$TimeSlotModelImplToJson(_$TimeSlotModelImpl instance) =>
-    <String, dynamic>{'time': instance.time, 'available': instance.available};
+    <String, dynamic>{
+      'time': instance.time,
+      'available': instance.available,
+    };
 
 _$AvailableSlotsResponseImpl _$$AvailableSlotsResponseImplFromJson(
   Map<String, dynamic> json,
@@ -80,5 +89,5 @@ Map<String, dynamic> _$$AvailableSlotsResponseImplToJson(
 ) => <String, dynamic>{
   'garage_id': instance.garageId,
   'date': instance.date,
-  'slots': instance.slots,
+  'slots': instance.slots.map((e) => e.toJson()).toList(),
 };

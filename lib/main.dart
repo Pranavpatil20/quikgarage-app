@@ -38,9 +38,7 @@ class _QuikGarageAppState extends ConsumerState<QuikGarageApp> {
   @override
   void initState() {
     super.initState();
-    if (DefaultFirebaseOptions.isConfigured) {
-      Future.microtask(() => ref.read(fcmServiceProvider).initialize());
-    }
+    Future.microtask(() => ref.read(fcmServiceProvider).initialize());
   }
 
   @override
@@ -49,6 +47,13 @@ class _QuikGarageAppState extends ConsumerState<QuikGarageApp> {
     final appThemeMode = ref.watch(themeModeProvider);
     final appLanguage = ref.watch(localeProvider);
     final strings = AppStrings(appLanguage);
+
+    ref.listen(authStateProvider, (prev, next) {
+      final user = next.valueOrNull;
+      if (user != null) {
+        ref.read(fcmServiceProvider).syncAfterAuth();
+      }
+    });
 
     return AppStringsScope(
       strings: strings,

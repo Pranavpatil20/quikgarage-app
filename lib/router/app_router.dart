@@ -11,6 +11,7 @@ import '../features/customer/bookings/presentation/my_bookings_screen.dart';
 import '../features/customer/home/presentation/customer_home_screen.dart';
 import '../features/customer/notifications/presentation/notifications_screen.dart';
 import '../features/customer/profile/presentation/profile_screen.dart';
+import '../features/customer/support/presentation/support_feedback_screen.dart';
 import '../features/owner/billing/presentation/billing_screen.dart';
 import '../features/owner/bookings/presentation/add_booking_screen.dart';
 import '../features/owner/bookings/presentation/owner_bookings_screen.dart';
@@ -135,6 +136,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/customer/notifications',
             builder: (_, __) => const NotificationsScreen(),
+          ),
+          GoRoute(
+            path: '/customer/support',
+            builder: (_, __) => const SupportFeedbackScreen(),
           ),
           GoRoute(
             path: '/customer/profile',

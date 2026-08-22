@@ -7,11 +7,13 @@ class AppBottomNavItem {
     required this.icon,
     required this.selectedIcon,
     required this.label,
+    this.badgeCount = 0,
   });
 
   final IconData icon;
   final IconData selectedIcon;
   final String label;
+  final int badgeCount;
 }
 
 /// Floating pill nav — only the rounded capsule is opaque; no full-width back plate.
@@ -83,6 +85,7 @@ class AppBottomNavBar extends StatelessWidget {
                   selected: selected,
                   label: item.label,
                   icon: selected ? item.selectedIcon : item.icon,
+                  badgeCount: item.badgeCount,
                   selectedBg: selectedBg,
                   selectedFg: selectedFg,
                   muted: muted,
@@ -106,6 +109,7 @@ class _NavTapTarget extends StatelessWidget {
     required this.selectedFg,
     required this.muted,
     required this.onTap,
+    this.badgeCount = 0,
   });
 
   final bool selected;
@@ -115,6 +119,7 @@ class _NavTapTarget extends StatelessWidget {
   final Color selectedFg;
   final Color muted;
   final VoidCallback onTap;
+  final int badgeCount;
 
   @override
   Widget build(BuildContext context) {
@@ -135,10 +140,15 @@ class _NavTapTarget extends StatelessWidget {
                 color: selected ? selectedBg : Colors.transparent,
                 borderRadius: BorderRadius.circular(18),
               ),
-              child: Icon(
-                icon,
-                size: 24,
-                color: selected ? selectedFg : muted,
+              child: Badge(
+                isLabelVisible: badgeCount > 0,
+                label: Text(badgeCount > 9 ? '9+' : '$badgeCount'),
+                backgroundColor: AppColors.brandGreen,
+                child: Icon(
+                  icon,
+                  size: 24,
+                  color: selected ? selectedFg : muted,
+                ),
               ),
             ),
           ),

@@ -11,11 +11,13 @@ class BookingCard extends StatelessWidget {
     super.key,
     required this.booking,
     this.onTap,
+    this.onWhatsApp,
     this.trailing,
   });
 
   final BookingModel booking;
   final VoidCallback? onTap;
+  final VoidCallback? onWhatsApp;
   final Widget? trailing;
 
   @override
@@ -115,6 +117,17 @@ class BookingCard extends StatelessWidget {
               color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
+          if (onWhatsApp != null) ...[
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: OutlinedButton.icon(
+                onPressed: onWhatsApp,
+                icon: const Icon(Icons.chat, size: 18),
+                label: Text(s.sendWhatsApp),
+              ),
+            ),
+          ],
         ],
       ),
     );

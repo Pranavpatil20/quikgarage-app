@@ -34,6 +34,14 @@ class AppStrings {
   String get editProfile => _t('Edit Profile', 'प्रोफ़ाइल संपादित करें', 'प्रोफाइल संपादित करा');
   String get supportFeedback =>
       _t('Support & Feedback', 'सहायता और प्रतिक्रिया', 'सहाय्य आणि अभिप्राय');
+  String get support => _t('Support', 'सहायता', 'सहाय्य');
+  String get supportHint => _t(
+        'Reach us anytime for help or feedback.',
+        'मदद या प्रतिक्रिया के लिए कभी भी संपर्क करें।',
+        'मदत किंवा अभिप्रायासाठी कधीही संपर्क करा.',
+      );
+  String get supportEmailLabel => _t('Email', 'ईमेल', 'ईमेल');
+  String get supportCallLabel => _t('Call', 'कॉल', 'कॉल');
   String get logout => _t('Logout', 'लॉग आउट', 'लॉग आउट');
   String get signOut => _t('Sign Out', 'साइन आउट', 'साइन आउट');
 
@@ -98,9 +106,9 @@ class AppStrings {
         'वैध सर्व्हिस रक्कम प्रविष्ट करा',
       );
   String get supportMessage => _t(
-        'For support, email support@quikgarage.com or call +91 98765 43210.',
-        'सहायता के लिए support@quikgarage.com पर ईमेल करें या +91 98765 43210 पर कॉल करें।',
-        'सहाय्यासाठी support@quikgarage.com वर ईमेल करा किंवा +91 98765 43210 वर कॉल करा.',
+        'For support, email info@digiaarambh.com or call +91 8605864047 / +91 7020681301.',
+        'सहायता के लिए info@digiaarambh.com पर ईमेल करें या +91 8605864047 / +91 7020681301 पर कॉल करें।',
+        'सहाय्यासाठी info@digiaarambh.com वर ईमेल करा किंवा +91 8605864047 / +91 7020681301 वर कॉल करा.',
       );
   String get noGarageYet => _t(
         'No garage yet',
@@ -113,7 +121,6 @@ class AppStrings {
         'बुकिंग मिळवण्यासाठी गॅरेज तयार करा',
       );
   String get versionLabel => _t('Version', 'संस्करण', 'आवृत्ती');
-  String get buildLabel => _t('Build', 'बिल्ड', 'बिल्ड');
 
   String get billingInvoices =>
       _t('Billing & Invoices', 'बिलिंग और इनवॉइस', 'बिलिंग आणि इनव्हॉइस');
@@ -239,6 +246,37 @@ class AppStrings {
   String get moveBackToPending =>
       _t('Move back to Pending', 'लंबित पर वापस लाएँ', 'प्रलंबितवर परत आणा');
   String get markPaid => _t('Mark Paid', 'भुगतान करें', 'भरले करा');
+  String get sendWhatsApp => _t('WhatsApp', 'व्हाट्सऐप', 'व्हॉट्सअॅप');
+  String get sendWhatsAppDetails => _t(
+        'Send details on WhatsApp',
+        'विवरण व्हाट्सऐप पर भेजें',
+        'तपशील व्हॉट्सअॅपवर पाठवा',
+      );
+  String get whatsappNoCustomerPhone => _t(
+        'Customer phone number is missing',
+        'ग्राहक फ़ोन नंबर नहीं है',
+        'ग्राहक फोन नंबर नाही',
+      );
+  String get whatsappOpenFailed => _t(
+        'Could not open WhatsApp',
+        'व्हाट्सऐप नहीं खुल सका',
+        'व्हॉट्सअॅप उघडता आले नाही',
+      );
+  String get sendInvoicePdf => _t(
+        'Send invoice PDF',
+        'इनवॉइस PDF भेजें',
+        'इनव्हॉइस PDF पाठवा',
+      );
+  String get invoicePdfFailed => _t(
+        'Could not create invoice PDF',
+        'इनवॉइस PDF नहीं बन सका',
+        'इनव्हॉइस PDF तयार करता आले नाही',
+      );
+  String get whatsappPickToSendPdf => _t(
+        'Choose WhatsApp to send the invoice PDF',
+        'इनवॉइस PDF भेजने के लिए व्हाट्सऐप चुनें',
+        'इनव्हॉइस PDF पाठवण्यासाठी व्हॉट्सअॅप निवडा',
+      );
   String get manage => _t('Manage', 'प्रबंधित करें', 'व्यवस्थापित करा');
   String get yesPaid => _t('Yes, Paid', 'हाँ, भुगतान', 'होय, भरले');
   String get serviceCost => _t('Service', 'सेवा', 'सेवा');

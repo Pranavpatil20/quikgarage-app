@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/providers/invoice_provider.dart';
+import '../../../../core/utils/whatsapp_share.dart';
 import '../../../../core/widgets/app_bottom_nav_bar.dart';
 import '../../../../core/widgets/app_overlays.dart';
 import '../../../../core/widgets/glass_card.dart';
@@ -329,6 +330,18 @@ class _InvoiceCard extends StatelessWidget {
           _row(theme, s.partsCost, '₹${invoice.partsCost}'),
           const SizedBox(height: 8),
           _row(theme, s.total, '₹${invoice.totalAmount}', bold: true),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => WhatsAppShare.sendInvoicePdf(
+                context: context,
+                invoice: invoice,
+              ),
+              icon: const Icon(Icons.picture_as_pdf, size: 18),
+              label: Text(s.sendInvoicePdf),
+            ),
+          ),
           if (isPending) ...[
             const SizedBox(height: 12),
             Row(

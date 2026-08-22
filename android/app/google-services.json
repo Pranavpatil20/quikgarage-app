@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "500127525462",
+    "project_id": "quikgarage-fb57c",
+    "storage_bucket": "quikgarage-fb57c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:500127525462:android:def7ed0ee6e73a3a58a9f7",
+        "android_client_info": {
+          "package_name": "com.quikgarage.quikgarage"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDnr_VpiP_tXuT7PQqlY7w3pnonO3zcUSU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

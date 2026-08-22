@@ -15,7 +15,10 @@ class NotificationRepository {
   final Dio _dio;
 
   Future<List<NotificationModel>> getNotifications() async {
-    final response = await _dio.get(ApiConstants.notifications);
+    final response = await _dio.get(
+      ApiConstants.notifications,
+      queryParameters: {'page_size': 100},
+    );
     final data = response.data;
     if (data is Map && data['results'] is List) {
       return (data['results'] as List)

@@ -41,7 +41,11 @@ mixin _$BookingModel {
   String get status => throw _privateConstructorUsedError;
   @JsonKey(name: 'can_cancel')
   bool get canCancel => throw _privateConstructorUsedError;
+  @JsonKey(name: 'completed_at')
+  DateTime? get completedAt => throw _privateConstructorUsedError;
+  @JsonKey(name: 'created_at')
   DateTime? get createdAt => throw _privateConstructorUsedError;
+  @JsonKey(name: 'updated_at')
   DateTime? get updatedAt => throw _privateConstructorUsedError;
 
   /// Serializes this BookingModel to a JSON map.
@@ -75,8 +79,9 @@ abstract class $BookingModelCopyWith<$Res> {
     String notes,
     String status,
     @JsonKey(name: 'can_cancel') bool canCancel,
-    DateTime? createdAt,
-    DateTime? updatedAt,
+    @JsonKey(name: 'completed_at') DateTime? completedAt,
+    @JsonKey(name: 'created_at') DateTime? createdAt,
+    @JsonKey(name: 'updated_at') DateTime? updatedAt,
   });
 
   $UserModelCopyWith<$Res>? get customerDetail;
@@ -112,6 +117,7 @@ class _$BookingModelCopyWithImpl<$Res, $Val extends BookingModel>
     Object? notes = null,
     Object? status = null,
     Object? canCancel = null,
+    Object? completedAt = freezed,
     Object? createdAt = freezed,
     Object? updatedAt = freezed,
   }) {
@@ -169,6 +175,10 @@ class _$BookingModelCopyWithImpl<$Res, $Val extends BookingModel>
                 ? _value.canCancel
                 : canCancel // ignore: cast_nullable_to_non_nullable
                       as bool,
+            completedAt: freezed == completedAt
+                ? _value.completedAt
+                : completedAt // ignore: cast_nullable_to_non_nullable
+                      as DateTime?,
             createdAt: freezed == createdAt
                 ? _value.createdAt
                 : createdAt // ignore: cast_nullable_to_non_nullable
@@ -248,8 +258,9 @@ abstract class _$$BookingModelImplCopyWith<$Res>
     String notes,
     String status,
     @JsonKey(name: 'can_cancel') bool canCancel,
-    DateTime? createdAt,
-    DateTime? updatedAt,
+    @JsonKey(name: 'completed_at') DateTime? completedAt,
+    @JsonKey(name: 'created_at') DateTime? createdAt,
+    @JsonKey(name: 'updated_at') DateTime? updatedAt,
   });
 
   @override
@@ -287,6 +298,7 @@ class __$$BookingModelImplCopyWithImpl<$Res>
     Object? notes = null,
     Object? status = null,
     Object? canCancel = null,
+    Object? completedAt = freezed,
     Object? createdAt = freezed,
     Object? updatedAt = freezed,
   }) {
@@ -344,6 +356,10 @@ class __$$BookingModelImplCopyWithImpl<$Res>
             ? _value.canCancel
             : canCancel // ignore: cast_nullable_to_non_nullable
                   as bool,
+        completedAt: freezed == completedAt
+            ? _value.completedAt
+            : completedAt // ignore: cast_nullable_to_non_nullable
+                  as DateTime?,
         createdAt: freezed == createdAt
             ? _value.createdAt
             : createdAt // ignore: cast_nullable_to_non_nullable
@@ -374,8 +390,9 @@ class _$BookingModelImpl implements _BookingModel {
     this.notes = '',
     this.status = 'pending',
     @JsonKey(name: 'can_cancel') this.canCancel = false,
-    this.createdAt,
-    this.updatedAt,
+    @JsonKey(name: 'completed_at') this.completedAt,
+    @JsonKey(name: 'created_at') this.createdAt,
+    @JsonKey(name: 'updated_at') this.updatedAt,
   });
 
   factory _$BookingModelImpl.fromJson(Map<String, dynamic> json) =>
@@ -417,13 +434,18 @@ class _$BookingModelImpl implements _BookingModel {
   @JsonKey(name: 'can_cancel')
   final bool canCancel;
   @override
+  @JsonKey(name: 'completed_at')
+  final DateTime? completedAt;
+  @override
+  @JsonKey(name: 'created_at')
   final DateTime? createdAt;
   @override
+  @JsonKey(name: 'updated_at')
   final DateTime? updatedAt;
 
   @override
   String toString() {
-    return 'BookingModel(id: $id, customer: $customer, customerDetail: $customerDetail, garage: $garage, garageDetail: $garageDetail, vehicle: $vehicle, vehicleDetail: $vehicleDetail, serviceType: $serviceType, bookingDate: $bookingDate, timeSlot: $timeSlot, notes: $notes, status: $status, canCancel: $canCancel, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'BookingModel(id: $id, customer: $customer, customerDetail: $customerDetail, garage: $garage, garageDetail: $garageDetail, vehicle: $vehicle, vehicleDetail: $vehicleDetail, serviceType: $serviceType, bookingDate: $bookingDate, timeSlot: $timeSlot, notes: $notes, status: $status, canCancel: $canCancel, completedAt: $completedAt, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -452,6 +474,8 @@ class _$BookingModelImpl implements _BookingModel {
             (identical(other.status, status) || other.status == status) &&
             (identical(other.canCancel, canCancel) ||
                 other.canCancel == canCancel) &&
+            (identical(other.completedAt, completedAt) ||
+                other.completedAt == completedAt) &&
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt) &&
             (identical(other.updatedAt, updatedAt) ||
@@ -475,6 +499,7 @@ class _$BookingModelImpl implements _BookingModel {
     notes,
     status,
     canCancel,
+    completedAt,
     createdAt,
     updatedAt,
   );
@@ -508,8 +533,9 @@ abstract class _BookingModel implements BookingModel {
     final String notes,
     final String status,
     @JsonKey(name: 'can_cancel') final bool canCancel,
-    final DateTime? createdAt,
-    final DateTime? updatedAt,
+    @JsonKey(name: 'completed_at') final DateTime? completedAt,
+    @JsonKey(name: 'created_at') final DateTime? createdAt,
+    @JsonKey(name: 'updated_at') final DateTime? updatedAt,
   }) = _$BookingModelImpl;
 
   factory _BookingModel.fromJson(Map<String, dynamic> json) =
@@ -549,8 +575,13 @@ abstract class _BookingModel implements BookingModel {
   @JsonKey(name: 'can_cancel')
   bool get canCancel;
   @override
+  @JsonKey(name: 'completed_at')
+  DateTime? get completedAt;
+  @override
+  @JsonKey(name: 'created_at')
   DateTime? get createdAt;
   @override
+  @JsonKey(name: 'updated_at')
   DateTime? get updatedAt;
 
   /// Create a copy of BookingModel

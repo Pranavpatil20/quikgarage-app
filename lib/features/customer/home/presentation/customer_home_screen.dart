@@ -6,11 +6,14 @@ import '../../../../core/providers/auth_provider.dart';
 import '../../../../core/providers/booking_provider.dart';
 import '../../../../core/widgets/app_bottom_nav_bar.dart';
 import '../../../../core/widgets/app_logo.dart';
+import '../../../../core/widgets/bike_service_carousel.dart';
 import '../../../../core/widgets/booking_card.dart';
 import '../../../../core/widgets/brand_header.dart';
 import '../../../../core/widgets/glass_card.dart';
+import '../../../../core/widgets/notification_bell_button.dart';
 import '../../../../core/widgets/status_chip.dart';
 import '../../../../l10n/app_strings.dart';
+import '../../../../services/fcm_service.dart';
 import '../../../../theme/app_colors.dart';
 
 class CustomerHomeScreen extends ConsumerWidget {
@@ -22,6 +25,18 @@ class CustomerHomeScreen extends ConsumerWidget {
     final bookingsAsync = ref.watch(customerBookingsProvider(null));
     final theme = Theme.of(context);
     final s = AppStrings.of(context);
+
+    bookingsAsync.whenData((list) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!context.mounted) return;
+        ref.read(fcmServiceProvider).syncServiceReminders(list);
+      });
+    });
+    ref.listen(customerBookingsProvider(null), (prev, next) {
+      next.whenData((list) {
+        ref.read(fcmServiceProvider).syncServiceReminders(list);
+      });
+    });
 
     final activeBooking = bookingsAsync.maybeWhen(
       data: (list) {
@@ -55,9 +70,7 @@ class CustomerHomeScreen extends ConsumerWidget {
                         ),
                       ),
                     ),
-                    IconButton(
-                      visualDensity: VisualDensity.compact,
-                      icon: const Icon(Icons.notifications_outlined, color: AppColors.onYellow),
+                    NotificationBellButton(
                       onPressed: () => context.push('/customer/notifications'),
                     ),
                   ],
@@ -66,93 +79,25 @@ class CustomerHomeScreen extends ConsumerWidget {
             ),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: SizedBox(
-                      height: 240,
-                      width: double.infinity,
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          Image.network(
-                            'https://images.unsplash.com/photo-1617788138017-80e456137b25?w=800',
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, _, _) => ColoredBox(
-                              color: theme.colorScheme.primaryContainer,
-                            ),
-                          ),
-                          // Dark gradient so white text stays readable.
-                          const DecoratedBox(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [
-                                  Color(0x33000000),
-                                  Color(0x99000000),
-                                  Color(0xE6000000),
-                                ],
-                                stops: [0.0, 0.45, 1.0],
-                              ),
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                Text(
-                                  s.readyForCheckup,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: theme.textTheme.titleLarge?.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w700,
-                                    height: 1.2,
-                                    shadows: const [
-                                      Shadow(
-                                        blurRadius: 8,
-                                        color: Colors.black54,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  s.bookPremiumService,
-                                  maxLines: 3,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: Colors.white.withValues(alpha: 0.95),
-                                    height: 1.35,
-                                    shadows: const [
-                                      Shadow(
-                                        blurRadius: 6,
-                                        color: Colors.black45,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 14),
-                                ElevatedButton.icon(
-                                  onPressed: () => context.push('/customer/book'),
-                                  icon: const Icon(Icons.arrow_forward),
-                                  label: Text(s.bookService),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: AppColors.brandYellow,
-                                    foregroundColor: AppColors.onYellow,
-                                    disabledForegroundColor:
-                                        AppColors.onYellow.withValues(alpha: 0.6),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const BikeServiceCarousel.customer(),
+                      const SizedBox(height: 16),
+                      ElevatedButton.icon(
+                        onPressed: () => context.push('/customer/book'),
+                        icon: const Icon(Icons.arrow_forward),
+                        label: Text(s.bookService),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.brandYellow,
+                          foregroundColor: AppColors.onYellow,
+                          disabledForegroundColor:
+                              AppColors.onYellow.withValues(alpha: 0.6),
+                          minimumSize: const Size.fromHeight(48),
+                        ),
                       ),
-                    ),
+                    ],
                   ),
                 ),
               ),

@@ -3,21 +3,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/constants/api_constants.dart';
 import '../core/errors/app_exception.dart';
+import '../core/providers/storage_provider.dart';
+import '../core/subscription_lock_handler.dart';
 import 'storage_service.dart';
+
+export '../core/providers/storage_provider.dart' show storageServiceProvider;
 
 final dioProvider = Provider<Dio>((ref) {
   final storage = ref.watch(storageServiceProvider);
   return ApiClient(storage).dio;
 });
 
-final storageServiceProvider = Provider<StorageService>((ref) => StorageService());
-
 class ApiClient {
   ApiClient(this._storage) {
     dio = Dio(
       BaseOptions(
         baseUrl: ApiConstants.baseUrl,
-        // Free Render cold-starts can take 50–70s on the first request.
         connectTimeout: const Duration(seconds: 90),
         receiveTimeout: const Duration(seconds: 90),
         sendTimeout: const Duration(seconds: 90),
@@ -35,6 +36,12 @@ class ApiClient {
           handler.next(options);
         },
         onError: (error, handler) async {
+          if (error.response?.statusCode == 403) {
+            final data = error.response?.data;
+            if (data is Map && data['code'] == 'subscription_required') {
+              notifySubscriptionLockDetected();
+            }
+          }
           if (error.response?.statusCode == 401) {
             final refreshed = await _refreshToken();
             if (refreshed) {

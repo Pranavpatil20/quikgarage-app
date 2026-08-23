@@ -18,6 +18,7 @@ import '../../../../models/garage_model.dart';
 import '../../../../core/widgets/mic_text_field.dart';
 import '../../../../repositories/garage_repository.dart';
 import '../../../../repositories/user_repository.dart';
+import 'rates_settings_screen.dart';
 
 class OwnerSettingsScreen extends ConsumerStatefulWidget {
   const OwnerSettingsScreen({super.key});
@@ -755,6 +756,21 @@ class _OwnerSettingsScreenState extends ConsumerState<OwnerSettingsScreen> {
                   _sectionLabel(s.appSettings, theme),
                   _settingsCard(
                     children: [
+                      _settingsRow(
+                        iconBg: theme.colorScheme.primaryContainer.withValues(alpha: 0.35),
+                        iconColor: theme.colorScheme.primary,
+                        icon: Icons.currency_rupee,
+                        title: 'Rates',
+                        subtitle: 'Default prices for services & parts',
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const RatesSettingsScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                      Divider(height: 1, color: theme.colorScheme.outlineVariant.withValues(alpha: 0.35)),
                       _settingsRow(
                         iconBg: theme.colorScheme.primaryContainer.withValues(alpha: 0.35),
                         iconColor: theme.colorScheme.primary,

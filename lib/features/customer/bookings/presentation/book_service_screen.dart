@@ -26,7 +26,7 @@ class BookServiceScreen extends ConsumerStatefulWidget {
 class _BookServiceScreenState extends ConsumerState<BookServiceScreen> {
   int? _selectedVehicleId;
   int? _selectedGarageId;
-  String _serviceType = 'general_service';
+  final Set<String> _selectedServiceTypes = {'general_service'};
   DateTime _selectedDate = DateTime.now();
   String? _selectedSlot;
   final _notesController = TextEditingController();
@@ -76,6 +76,7 @@ class _BookServiceScreenState extends ConsumerState<BookServiceScreen> {
   String? _validationMessage(AppStrings s) {
     if (_selectedVehicleId == null) return s.pleaseSelectVehicle;
     if (_selectedGarageId == null) return s.pleaseSelectGarage;
+    if (_selectedServiceTypes.isEmpty) return 'Please select at least one service type';
     if (_selectedSlot == null) return s.pleaseSelectTimeSlot;
     return null;
   }
@@ -116,7 +117,7 @@ class _BookServiceScreenState extends ConsumerState<BookServiceScreen> {
       await ref.read(bookingRepositoryProvider).createBooking({
         'garage': _selectedGarageId,
         'vehicle': _selectedVehicleId,
-        'service_type': _serviceType,
+        'service_type': _selectedServiceTypes.join(','),
         'booking_date': AppDateUtils.toApiDate(_selectedDate),
         'time_slot': _normalizeTimeSlot(_selectedSlot!),
         'notes': _notesController.text.trim(),
@@ -234,7 +235,9 @@ class _BookServiceScreenState extends ConsumerState<BookServiceScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Icon(
-                                Icons.directions_car,
+                                v.vehicleType == 'bike'
+                                    ? Icons.two_wheeler
+                                    : Icons.directions_car,
                                 color: theme.colorScheme.primary,
                               ),
                               const Spacer(),
@@ -323,18 +326,48 @@ class _BookServiceScreenState extends ConsumerState<BookServiceScreen> {
             ),
             const SizedBox(height: 24),
             Text(s.serviceTypeLabel, style: theme.textTheme.headlineMedium),
+            const SizedBox(height: 4),
+            Text(
+              'You can select more than one',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
             const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: AppConstants.serviceTypes.map((type) {
-                final selected = _serviceType == type;
-                return FilterChip(
-                  label: Text(s.serviceType(type)),
-                  selected: selected,
-                  onSelected: (_) => setState(() => _serviceType = type),
+            Builder(
+              builder: (context) {
+                final vehicles = ref.watch(vehiclesProvider).valueOrNull ?? [];
+                final selectedVehicle = vehicles
+                    .where((v) => v.id == _selectedVehicleId)
+                    .firstOrNull;
+                final vehicleType = selectedVehicle?.vehicleType ?? 'bike';
+                final types = AppConstants.serviceTypesForVehicle(vehicleType);
+                // Drop selections that don't apply to this vehicle.
+                _selectedServiceTypes.removeWhere((t) => !types.contains(t));
+                if (_selectedServiceTypes.isEmpty) {
+                  _selectedServiceTypes.add('general_service');
+                }
+                return Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: types.map((type) {
+                    final selected = _selectedServiceTypes.contains(type);
+                    return FilterChip(
+                      label: Text(
+                        s.serviceType(type, vehicleType: vehicleType),
+                      ),
+                      selected: selected,
+                      onSelected: (v) => setState(() {
+                        if (v) {
+                          _selectedServiceTypes.add(type);
+                        } else {
+                          _selectedServiceTypes.remove(type);
+                        }
+                      }),
+                    );
+                  }).toList(),
                 );
-              }).toList(),
+              },
             ),
             const SizedBox(height: 24),
             ListTile(
@@ -435,51 +468,66 @@ class _BookServiceScreenState extends ConsumerState<BookServiceScreen> {
     final s = AppStrings.of(context);
     final numberController = TextEditingController();
     final modelController = TextEditingController();
+    var vehicleType = 'bike';
     showAppModalBottomSheet(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              MicTextField(
-                controller: numberController,
-                decoration: InputDecoration(labelText: s.vehicleNumber),
-                textCapitalization: TextCapitalization.characters,
-              ),
-              const SizedBox(height: 16),
-              MicTextField(
-                controller: modelController,
-                decoration: InputDecoration(labelText: s.makeModel),
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: () async {
-                  final number = numberController.text.trim().toUpperCase();
-                  if (number.isEmpty) return;
-                  final created =
-                      await ref.read(vehicleRepositoryProvider).createVehicle({
-                    'vehicle_number': number,
-                    'make_model': modelController.text.trim(),
-                    'vehicle_type': 'car',
-                    'is_primary': true,
-                  });
-                  ref.invalidate(vehiclesProvider);
-                  if (mounted) {
-                    setState(() {
-                      _selectedVehicleId = created.id;
-                      _didAutoSelectVehicle = true;
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setModalState) => Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text('Vehicle type', style: Theme.of(ctx).textTheme.titleMedium),
+                const SizedBox(height: 8),
+                SegmentedButton<String>(
+                  segments: const [
+                    ButtonSegment(value: 'bike', label: Text('Bike'), icon: Icon(Icons.two_wheeler)),
+                    ButtonSegment(value: 'car', label: Text('Car'), icon: Icon(Icons.directions_car)),
+                  ],
+                  selected: {vehicleType},
+                  onSelectionChanged: (v) => setModalState(() => vehicleType = v.first),
+                ),
+                const SizedBox(height: 16),
+                MicTextField(
+                  controller: numberController,
+                  decoration: InputDecoration(labelText: s.vehicleNumber),
+                  textCapitalization: TextCapitalization.characters,
+                ),
+                const SizedBox(height: 16),
+                MicTextField(
+                  controller: modelController,
+                  decoration: InputDecoration(labelText: s.makeModel),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: () async {
+                    final number = numberController.text.trim().toUpperCase();
+                    if (number.isEmpty) return;
+                    final created =
+                        await ref.read(vehicleRepositoryProvider).createVehicle({
+                      'vehicle_number': number,
+                      'make_model': modelController.text.trim(),
+                      'vehicle_type': vehicleType,
+                      'is_primary': true,
                     });
-                  }
-                  if (ctx.mounted) Navigator.pop(ctx);
-                },
-                child: Text(s.addVehicle),
-              ),
-            ],
+                    ref.invalidate(vehiclesProvider);
+                    if (mounted) {
+                      setState(() {
+                        _selectedVehicleId = created.id;
+                        _didAutoSelectVehicle = true;
+                      });
+                    }
+                    if (ctx.mounted) Navigator.pop(ctx);
+                  },
+                  child: Text(s.addVehicle),
+                ),
+              ],
+            ),
           ),
         ),
       ),

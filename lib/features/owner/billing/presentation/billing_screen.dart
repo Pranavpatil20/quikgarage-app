@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/providers/invoice_provider.dart';
@@ -13,6 +12,7 @@ import '../../../../core/widgets/status_chip.dart';
 import '../../../../l10n/app_strings.dart';
 import '../../../../models/invoice_model.dart';
 import '../../../../repositories/invoice_repository.dart';
+import 'edit_invoice_screen.dart';
 
 class BillingScreen extends ConsumerStatefulWidget {
   const BillingScreen({super.key});
@@ -184,32 +184,12 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
   }
 
   Future<void> _editInvoice(InvoiceModel invoice) async {
-    final s = AppStrings.of(context);
-    final result = await showAppDialog<({String service, String parts})>(
-      context: context,
-      builder: (ctx) => _EditInvoiceDialog(invoice: invoice),
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => EditInvoiceScreen(invoice: invoice),
+      ),
     );
-
-    if (result == null || !mounted) return;
-
-    try {
-      await ref.read(invoiceRepositoryProvider).updateInvoice(invoice.id, {
-        'service_cost': result.service.isEmpty ? '0.00' : result.service,
-        'parts_cost': result.parts.isEmpty ? '0.00' : result.parts,
-      });
-      ref.invalidate(invoicesProvider);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(s.invoiceAmountUpdated)),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$e')),
-        );
-      }
-    }
+    ref.invalidate(invoicesProvider);
   }
 
   Future<void> _confirmMarkPaid(InvoiceModel invoice) async {
@@ -382,96 +362,6 @@ class _InvoiceCard extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _EditInvoiceDialog extends StatefulWidget {
-  const _EditInvoiceDialog({required this.invoice});
-
-  final InvoiceModel invoice;
-
-  @override
-  State<_EditInvoiceDialog> createState() => _EditInvoiceDialogState();
-}
-
-class _EditInvoiceDialogState extends State<_EditInvoiceDialog> {
-  late final TextEditingController _serviceController;
-  late final TextEditingController _partsController;
-
-  @override
-  void initState() {
-    super.initState();
-    _serviceController = TextEditingController(text: widget.invoice.serviceCost);
-    _partsController = TextEditingController(text: widget.invoice.partsCost);
-  }
-
-  @override
-  void dispose() {
-    _serviceController.dispose();
-    _partsController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final s = AppStrings.of(context);
-    return AlertDialog(
-      title: Text('${s.editAmount} #${widget.invoice.id}'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextField(
-            controller: _serviceController,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
-            ],
-            decoration: InputDecoration(
-              labelText: '${s.serviceCost} (₹)',
-              prefixIcon: const Icon(Icons.build),
-            ),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _partsController,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
-            ],
-            decoration: InputDecoration(
-              labelText: '${s.partsCost} (₹)',
-              prefixIcon: const Icon(Icons.settings),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            s.updateServicePartsCost,
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(s.cancel),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            Navigator.pop(
-              context,
-              (
-                service: _serviceController.text.trim(),
-                parts: _partsController.text.trim(),
-              ),
-            );
-          },
-          child: Text(s.save),
-        ),
-      ],
     );
   }
 }

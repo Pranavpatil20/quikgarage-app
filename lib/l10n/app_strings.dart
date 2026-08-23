@@ -44,6 +44,16 @@ class AppStrings {
   String get supportCallLabel => _t('Call', 'कॉल', 'कॉल');
   String get logout => _t('Logout', 'लॉग आउट', 'लॉग आउट');
   String get signOut => _t('Sign Out', 'साइन आउट', 'साइन आउट');
+  String get subscriptionPaymentRequired => _t(
+        'Subscription payment required',
+        'सदस्यता भुगतान आवश्यक',
+        'सदस्यता पेमेंट आवश्यक',
+      );
+  String get subscriptionPaymentMessage => _t(
+        'Your free trial has ended. Please contact us to complete your monthly subscription payment. Once payment is confirmed, you can use the app again.',
+        'आपका मुफ्त ट्रायल समाप्त हो गया है। मासिक सदस्यता भुगतान के लिए कृपया हमसे संपर्क करें। भुगतान की पुष्टि होने के बाद आप ऐप का उपयोग फिर से कर सकेंगे।',
+        'तुमचा विनामूल्य ट्रायल संपला आहे. मासिक सदस्यता पेमेंटसाठी कृपया आमच्याशी संपर्क करा. पेमेंट पुष्टी झाल्यावर तुम्ही पुन्हा अॅप वापरू शकता.',
+      );
 
   String get dashboard => _t('Dashboard', 'डैशबोर्ड', 'डॅशबोर्ड');
   String get home => _t('Home', 'होम', 'होम');
@@ -375,13 +385,28 @@ class AppStrings {
   String get vehicleAdded =>
       _t('Vehicle added', 'वाहन जोड़ा गया', 'वाहन जोडले');
 
-  String serviceType(String key) {
+  String serviceType(String key, {String? vehicleType}) {
+    final keys = key.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty);
+    if (keys.isEmpty) return key;
+    return keys.map((k) => _serviceTypeLabel(k, vehicleType: vehicleType)).join(', ');
+  }
+
+  String _serviceTypeLabel(String key, {String? vehicleType}) {
+    if (key == 'wash') {
+      final t = (vehicleType ?? '').toLowerCase().trim();
+      if (t == 'bike') {
+        return _t('Bike Wash', 'बाइक वॉश', 'बाईक वॉश');
+      }
+      if (t == 'car') {
+        return _t('Car Wash', 'कार वॉश', 'कार वॉश');
+      }
+      return _t('Wash', 'वॉश', 'वॉश');
+    }
     const en = {
       'general_service': 'General Service',
       'oil_change': 'Oil Change',
       'ac_service': 'AC Service',
       'brake_service': 'Brake Service',
-      'wash': 'Car Wash',
       'repair': 'Repair',
       'inspection': 'Inspection',
       'other': 'Other',
@@ -391,7 +416,6 @@ class AppStrings {
       'oil_change': 'ऑयल चेंज',
       'ac_service': 'एसी सर्विस',
       'brake_service': 'ब्रेक सर्विस',
-      'wash': 'कार वॉश',
       'repair': 'मरम्मत',
       'inspection': 'निरीक्षण',
       'other': 'अन्य',
@@ -401,7 +425,6 @@ class AppStrings {
       'oil_change': 'ऑइल चेंज',
       'ac_service': 'एसी सर्व्हिस',
       'brake_service': 'ब्रेक सर्व्हिस',
-      'wash': 'कार वॉश',
       'repair': 'दुरुस्ती',
       'inspection': 'तपासणी',
       'other': 'इतर',

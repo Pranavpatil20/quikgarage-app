@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/providers/booking_provider.dart';
 import '../../../../core/providers/dashboard_provider.dart';
@@ -16,6 +17,7 @@ import '../../../../l10n/app_strings.dart';
 import '../../../../models/booking_model.dart';
 import '../../../../repositories/booking_repository.dart';
 import '../../../../theme/app_colors.dart';
+import 'update_service_screen.dart';
 
 class OwnerBookingsScreen extends ConsumerStatefulWidget {
   const OwnerBookingsScreen({super.key});
@@ -105,25 +107,51 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                     separatorBuilder: (_, _) => const SizedBox(height: 12),
                     itemBuilder: (context, index) {
                       final booking = filtered[index];
-                      return BookingCard(
-                        booking: booking,
-                        onTap: () => _showStatusSheet(context, booking),
-                        onWhatsApp: () => WhatsAppShare.send(
-                          context: context,
-                          phone: booking.customerDetail?.phone,
-                          message: WhatsAppShare.bookingMessage(
-                            booking,
-                            s,
-                            locale: Localizations.localeOf(context).toString(),
-                          ),
-                        ),
-                        trailing: booking.status == 'completed' ||
-                                booking.status == 'cancelled'
-                            ? null
-                            : PopupMenuButton<String>(
-                                onSelected: (value) => _updateStatus(booking, value),
-                                itemBuilder: (_) => _menuItems(s, booking.status),
+                      return Column(
+                        children: [
+                          BookingCard(
+                            booking: booking,
+                            onTap: () => _showStatusSheet(context, booking),
+                            onWhatsApp: () => WhatsAppShare.send(
+                              context: context,
+                              phone: booking.customerDetail?.phone,
+                              message: WhatsAppShare.bookingMessage(
+                                booking,
+                                s,
+                                locale: Localizations.localeOf(context).toString(),
                               ),
+                            ),
+                            trailing: booking.status == 'completed' ||
+                                    booking.status == 'cancelled'
+                                ? null
+                                : PopupMenuButton<String>(
+                                    onSelected: (value) => _updateStatus(booking, value),
+                                    itemBuilder: (_) => _menuItems(s, booking.status),
+                                  ),
+                          ),
+                          if (booking.status == 'in_progress') ...[
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: OutlinedButton.icon(
+                                    onPressed: () => _callCustomer(booking),
+                                    icon: const Icon(Icons.call, size: 18),
+                                    label: const Text('Call'),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: FilledButton.tonalIcon(
+                                    onPressed: () => _openUpdateService(booking),
+                                    icon: const Icon(Icons.build_circle_outlined, size: 18),
+                                    label: const Text('Update Service'),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ],
                       );
                     },
                   ),
@@ -229,6 +257,25 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                   );
                 },
               ),
+              if (booking.status == 'in_progress') ...[
+                ListTile(
+                  leading: Icon(Icons.call, color: theme.colorScheme.primary),
+                  title: const Text('Call customer'),
+                  subtitle: Text(booking.customerDetail?.phone ?? ''),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _callCustomer(booking);
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.build_circle_outlined, color: theme.colorScheme.primary),
+                  title: const Text('Update Service / Parts'),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _openUpdateService(booking);
+                  },
+                ),
+              ],
               for (final action in actions)
                 ListTile(
                   leading: Icon(action.icon, color: action.color ?? theme.colorScheme.primary),
@@ -247,6 +294,29 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Future<void> _callCustomer(BookingModel booking) async {
+    final phone = booking.customerDetail?.phone ?? '';
+    final digits = phone.replaceAll(RegExp(r'[^\d+]'), '');
+    if (digits.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Customer phone not available')),
+        );
+      }
+      return;
+    }
+    final uri = Uri(scheme: 'tel', path: digits);
+    await launchUrl(uri);
+  }
+
+  void _openUpdateService(BookingModel booking) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => UpdateServiceScreen(booking: booking),
       ),
     );
   }

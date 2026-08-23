@@ -38,6 +38,10 @@ class _MicTextFieldState extends State<MicTextField> {
   static bool _speechInited = false;
   bool _listening = false;
 
+  /// Text already in the field when listening starts.
+  /// Partials replace [base + recognizedWords] instead of appending again.
+  String _textBeforeListen = '';
+
   Future<void> _toggleListen() async {
     if (_listening) {
       await _speech.stop();
@@ -67,26 +71,29 @@ class _MicTextFieldState extends State<MicTextField> {
       return;
     }
 
+    _textBeforeListen = widget.controller.text.trimRight();
     setState(() => _listening = true);
 
     final localeId = widget.locale ?? _defaultLocale;
     await _speech.listen(
       onResult: (SpeechRecognitionResult result) {
-        final text = result.recognizedWords;
-        if (text.isEmpty) return;
-        final existing = widget.controller.text;
-        if (existing.isNotEmpty && !existing.endsWith(' ')) {
-          widget.controller.text = '$existing $text';
-        } else {
-          widget.controller.text = '$existing$text';
-        }
-        widget.controller.selection = TextSelection.collapsed(
-          offset: widget.controller.text.length,
+        final spoken = result.recognizedWords.trim();
+        if (spoken.isEmpty) return;
+
+        // Engine returns the full phrase so far — replace, don't append each partial.
+        final combined = _textBeforeListen.isEmpty
+            ? spoken
+            : '$_textBeforeListen $spoken';
+        widget.controller.value = TextEditingValue(
+          text: combined,
+          selection: TextSelection.collapsed(offset: combined.length),
         );
       },
       listenOptions: SpeechListenOptions(
         localeId: localeId,
         listenMode: ListenMode.dictation,
+        partialResults: true,
+        cancelOnError: true,
       ),
     );
   }

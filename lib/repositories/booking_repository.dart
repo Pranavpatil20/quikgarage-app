@@ -69,6 +69,24 @@ class BookingRepository {
         return BookingModel.fromJson(response.data as Map<String, dynamic>);
       });
 
+  Future<BookingModel> updateServiceItems(
+    int id, {
+    required List<Map<String, dynamic>> serviceItems,
+    String? serviceType,
+    String? notes,
+  }) =>
+      _guard(() async {
+        final response = await _dio.patch(
+          ApiConstants.bookingServiceItems(id),
+          data: {
+            'service_items': serviceItems,
+            if (serviceType != null) 'service_type': serviceType,
+            if (notes != null) 'notes': notes,
+          },
+        );
+        return BookingModel.fromJson(response.data as Map<String, dynamic>);
+      });
+
   Future<void> cancelBooking(int id) => _guard(() async {
         await _dio.delete('${ApiConstants.bookings}$id/');
       });

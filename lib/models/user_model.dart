@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'user_model.freezed.dart';
+part 'user_model.g.dart';
 
 @freezed
 class UserModel with _$UserModel {
@@ -11,39 +12,24 @@ class UserModel with _$UserModel {
     required String phone,
     @Default('') String name,
     @Default('customer') String role,
-    String? firebaseUid,
-    DateTime? createdAt,
-    DateTime? updatedAt,
+    @JsonKey(name: 'firebase_uid') String? firebaseUid,
+    @JsonKey(name: 'trial_ends_at') DateTime? trialEndsAt,
+    @JsonKey(name: 'subscription_paid_until') DateTime? subscriptionPaidUntil,
+    @JsonKey(name: 'subscription_active') @Default(true) bool subscriptionActive,
+    @JsonKey(name: 'is_payment_locked') @Default(false) bool isPaymentLocked,
+    @JsonKey(name: 'created_at') DateTime? createdAt,
+    @JsonKey(name: 'updated_at') DateTime? updatedAt,
   }) = _UserModel;
 
-  factory UserModel.fromJson(Map<String, dynamic> json) {
-    DateTime? parseDt(dynamic value) {
-      if (value == null) return null;
-      if (value is DateTime) return value;
-      return DateTime.tryParse(value.toString());
-    }
-
-    return UserModel(
-      id: (json['id'] as num).toInt(),
-      phone: json['phone'] as String? ?? '',
-      name: json['name'] as String? ?? '',
-      role: json['role'] as String? ?? 'customer',
-      firebaseUid: json['firebaseUid'] as String? ?? json['firebase_uid'] as String?,
-      createdAt: parseDt(json['createdAt'] ?? json['created_at']),
-      updatedAt: parseDt(json['updatedAt'] ?? json['updated_at']),
-    );
-  }
-
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'phone': phone,
-        'name': name,
-        'role': role,
-        'firebaseUid': firebaseUid,
-        'createdAt': createdAt?.toIso8601String(),
-        'updatedAt': updatedAt?.toIso8601String(),
-      };
+  factory UserModel.fromJson(Map<String, dynamic> json) =>
+      _$UserModelFromJson(json);
 
   bool get isOwner => role == 'owner';
   bool get isCustomer => role == 'customer';
+  bool get isOwnerLocked => isOwner && isPaymentLocked;
+}
+
+String ownerHomeRoute(UserModel user) {
+  if (user.isOwnerLocked) return '/owner/payment-lock';
+  return '/owner';
 }

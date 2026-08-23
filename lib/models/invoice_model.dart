@@ -14,6 +14,8 @@ class InvoiceModel with _$InvoiceModel {
     @JsonKey(name: 'service_cost') @Default('0.00') String serviceCost,
     @JsonKey(name: 'parts_cost') @Default('0.00') String partsCost,
     @JsonKey(name: 'total_amount') @Default('0.00') String totalAmount,
+    @JsonKey(name: 'line_items') @Default(<Map<String, dynamic>>[])
+    List<Map<String, dynamic>> lineItems,
     @JsonKey(name: 'payment_status') @Default('pending') String paymentStatus,
     DateTime? createdAt,
   }) = _InvoiceModel;

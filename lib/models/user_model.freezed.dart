@@ -15,15 +15,33 @@ final _privateConstructorUsedError = UnsupportedError(
   'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
 );
 
+UserModel _$UserModelFromJson(Map<String, dynamic> json) {
+  return _UserModel.fromJson(json);
+}
+
 /// @nodoc
 mixin _$UserModel {
   int get id => throw _privateConstructorUsedError;
   String get phone => throw _privateConstructorUsedError;
   String get name => throw _privateConstructorUsedError;
   String get role => throw _privateConstructorUsedError;
+  @JsonKey(name: 'firebase_uid')
   String? get firebaseUid => throw _privateConstructorUsedError;
+  @JsonKey(name: 'trial_ends_at')
+  DateTime? get trialEndsAt => throw _privateConstructorUsedError;
+  @JsonKey(name: 'subscription_paid_until')
+  DateTime? get subscriptionPaidUntil => throw _privateConstructorUsedError;
+  @JsonKey(name: 'subscription_active')
+  bool get subscriptionActive => throw _privateConstructorUsedError;
+  @JsonKey(name: 'is_payment_locked')
+  bool get isPaymentLocked => throw _privateConstructorUsedError;
+  @JsonKey(name: 'created_at')
   DateTime? get createdAt => throw _privateConstructorUsedError;
+  @JsonKey(name: 'updated_at')
   DateTime? get updatedAt => throw _privateConstructorUsedError;
+
+  /// Serializes this UserModel to a JSON map.
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
 
   /// Create a copy of UserModel
   /// with the given fields replaced by the non-null parameter values.
@@ -42,9 +60,13 @@ abstract class $UserModelCopyWith<$Res> {
     String phone,
     String name,
     String role,
-    String? firebaseUid,
-    DateTime? createdAt,
-    DateTime? updatedAt,
+    @JsonKey(name: 'firebase_uid') String? firebaseUid,
+    @JsonKey(name: 'trial_ends_at') DateTime? trialEndsAt,
+    @JsonKey(name: 'subscription_paid_until') DateTime? subscriptionPaidUntil,
+    @JsonKey(name: 'subscription_active') bool subscriptionActive,
+    @JsonKey(name: 'is_payment_locked') bool isPaymentLocked,
+    @JsonKey(name: 'created_at') DateTime? createdAt,
+    @JsonKey(name: 'updated_at') DateTime? updatedAt,
   });
 }
 
@@ -68,6 +90,10 @@ class _$UserModelCopyWithImpl<$Res, $Val extends UserModel>
     Object? name = null,
     Object? role = null,
     Object? firebaseUid = freezed,
+    Object? trialEndsAt = freezed,
+    Object? subscriptionPaidUntil = freezed,
+    Object? subscriptionActive = null,
+    Object? isPaymentLocked = null,
     Object? createdAt = freezed,
     Object? updatedAt = freezed,
   }) {
@@ -93,6 +119,22 @@ class _$UserModelCopyWithImpl<$Res, $Val extends UserModel>
                 ? _value.firebaseUid
                 : firebaseUid // ignore: cast_nullable_to_non_nullable
                       as String?,
+            trialEndsAt: freezed == trialEndsAt
+                ? _value.trialEndsAt
+                : trialEndsAt // ignore: cast_nullable_to_non_nullable
+                      as DateTime?,
+            subscriptionPaidUntil: freezed == subscriptionPaidUntil
+                ? _value.subscriptionPaidUntil
+                : subscriptionPaidUntil // ignore: cast_nullable_to_non_nullable
+                      as DateTime?,
+            subscriptionActive: null == subscriptionActive
+                ? _value.subscriptionActive
+                : subscriptionActive // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            isPaymentLocked: null == isPaymentLocked
+                ? _value.isPaymentLocked
+                : isPaymentLocked // ignore: cast_nullable_to_non_nullable
+                      as bool,
             createdAt: freezed == createdAt
                 ? _value.createdAt
                 : createdAt // ignore: cast_nullable_to_non_nullable
@@ -121,9 +163,13 @@ abstract class _$$UserModelImplCopyWith<$Res>
     String phone,
     String name,
     String role,
-    String? firebaseUid,
-    DateTime? createdAt,
-    DateTime? updatedAt,
+    @JsonKey(name: 'firebase_uid') String? firebaseUid,
+    @JsonKey(name: 'trial_ends_at') DateTime? trialEndsAt,
+    @JsonKey(name: 'subscription_paid_until') DateTime? subscriptionPaidUntil,
+    @JsonKey(name: 'subscription_active') bool subscriptionActive,
+    @JsonKey(name: 'is_payment_locked') bool isPaymentLocked,
+    @JsonKey(name: 'created_at') DateTime? createdAt,
+    @JsonKey(name: 'updated_at') DateTime? updatedAt,
   });
 }
 
@@ -146,6 +192,10 @@ class __$$UserModelImplCopyWithImpl<$Res>
     Object? name = null,
     Object? role = null,
     Object? firebaseUid = freezed,
+    Object? trialEndsAt = freezed,
+    Object? subscriptionPaidUntil = freezed,
+    Object? subscriptionActive = null,
+    Object? isPaymentLocked = null,
     Object? createdAt = freezed,
     Object? updatedAt = freezed,
   }) {
@@ -171,6 +221,22 @@ class __$$UserModelImplCopyWithImpl<$Res>
             ? _value.firebaseUid
             : firebaseUid // ignore: cast_nullable_to_non_nullable
                   as String?,
+        trialEndsAt: freezed == trialEndsAt
+            ? _value.trialEndsAt
+            : trialEndsAt // ignore: cast_nullable_to_non_nullable
+                  as DateTime?,
+        subscriptionPaidUntil: freezed == subscriptionPaidUntil
+            ? _value.subscriptionPaidUntil
+            : subscriptionPaidUntil // ignore: cast_nullable_to_non_nullable
+                  as DateTime?,
+        subscriptionActive: null == subscriptionActive
+            ? _value.subscriptionActive
+            : subscriptionActive // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        isPaymentLocked: null == isPaymentLocked
+            ? _value.isPaymentLocked
+            : isPaymentLocked // ignore: cast_nullable_to_non_nullable
+                  as bool,
         createdAt: freezed == createdAt
             ? _value.createdAt
             : createdAt // ignore: cast_nullable_to_non_nullable
@@ -185,17 +251,24 @@ class __$$UserModelImplCopyWithImpl<$Res>
 }
 
 /// @nodoc
-
+@JsonSerializable()
 class _$UserModelImpl extends _UserModel {
   const _$UserModelImpl({
     required this.id,
     required this.phone,
     this.name = '',
     this.role = 'customer',
-    this.firebaseUid,
-    this.createdAt,
-    this.updatedAt,
+    @JsonKey(name: 'firebase_uid') this.firebaseUid,
+    @JsonKey(name: 'trial_ends_at') this.trialEndsAt,
+    @JsonKey(name: 'subscription_paid_until') this.subscriptionPaidUntil,
+    @JsonKey(name: 'subscription_active') this.subscriptionActive = true,
+    @JsonKey(name: 'is_payment_locked') this.isPaymentLocked = false,
+    @JsonKey(name: 'created_at') this.createdAt,
+    @JsonKey(name: 'updated_at') this.updatedAt,
   }) : super._();
+
+  factory _$UserModelImpl.fromJson(Map<String, dynamic> json) =>
+      _$$UserModelImplFromJson(json);
 
   @override
   final int id;
@@ -208,15 +281,30 @@ class _$UserModelImpl extends _UserModel {
   @JsonKey()
   final String role;
   @override
+  @JsonKey(name: 'firebase_uid')
   final String? firebaseUid;
   @override
+  @JsonKey(name: 'trial_ends_at')
+  final DateTime? trialEndsAt;
+  @override
+  @JsonKey(name: 'subscription_paid_until')
+  final DateTime? subscriptionPaidUntil;
+  @override
+  @JsonKey(name: 'subscription_active')
+  final bool subscriptionActive;
+  @override
+  @JsonKey(name: 'is_payment_locked')
+  final bool isPaymentLocked;
+  @override
+  @JsonKey(name: 'created_at')
   final DateTime? createdAt;
   @override
+  @JsonKey(name: 'updated_at')
   final DateTime? updatedAt;
 
   @override
   String toString() {
-    return 'UserModel(id: $id, phone: $phone, name: $name, role: $role, firebaseUid: $firebaseUid, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'UserModel(id: $id, phone: $phone, name: $name, role: $role, firebaseUid: $firebaseUid, trialEndsAt: $trialEndsAt, subscriptionPaidUntil: $subscriptionPaidUntil, subscriptionActive: $subscriptionActive, isPaymentLocked: $isPaymentLocked, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -230,12 +318,21 @@ class _$UserModelImpl extends _UserModel {
             (identical(other.role, role) || other.role == role) &&
             (identical(other.firebaseUid, firebaseUid) ||
                 other.firebaseUid == firebaseUid) &&
+            (identical(other.trialEndsAt, trialEndsAt) ||
+                other.trialEndsAt == trialEndsAt) &&
+            (identical(other.subscriptionPaidUntil, subscriptionPaidUntil) ||
+                other.subscriptionPaidUntil == subscriptionPaidUntil) &&
+            (identical(other.subscriptionActive, subscriptionActive) ||
+                other.subscriptionActive == subscriptionActive) &&
+            (identical(other.isPaymentLocked, isPaymentLocked) ||
+                other.isPaymentLocked == isPaymentLocked) &&
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt) &&
             (identical(other.updatedAt, updatedAt) ||
                 other.updatedAt == updatedAt));
   }
 
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(
     runtimeType,
@@ -244,6 +341,10 @@ class _$UserModelImpl extends _UserModel {
     name,
     role,
     firebaseUid,
+    trialEndsAt,
+    subscriptionPaidUntil,
+    subscriptionActive,
+    isPaymentLocked,
     createdAt,
     updatedAt,
   );
@@ -255,6 +356,11 @@ class _$UserModelImpl extends _UserModel {
   @pragma('vm:prefer-inline')
   _$$UserModelImplCopyWith<_$UserModelImpl> get copyWith =>
       __$$UserModelImplCopyWithImpl<_$UserModelImpl>(this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$UserModelImplToJson(this);
+  }
 }
 
 abstract class _UserModel extends UserModel {
@@ -263,11 +369,19 @@ abstract class _UserModel extends UserModel {
     required final String phone,
     final String name,
     final String role,
-    final String? firebaseUid,
-    final DateTime? createdAt,
-    final DateTime? updatedAt,
+    @JsonKey(name: 'firebase_uid') final String? firebaseUid,
+    @JsonKey(name: 'trial_ends_at') final DateTime? trialEndsAt,
+    @JsonKey(name: 'subscription_paid_until')
+    final DateTime? subscriptionPaidUntil,
+    @JsonKey(name: 'subscription_active') final bool subscriptionActive,
+    @JsonKey(name: 'is_payment_locked') final bool isPaymentLocked,
+    @JsonKey(name: 'created_at') final DateTime? createdAt,
+    @JsonKey(name: 'updated_at') final DateTime? updatedAt,
   }) = _$UserModelImpl;
   const _UserModel._() : super._();
+
+  factory _UserModel.fromJson(Map<String, dynamic> json) =
+      _$UserModelImpl.fromJson;
 
   @override
   int get id;
@@ -278,10 +392,25 @@ abstract class _UserModel extends UserModel {
   @override
   String get role;
   @override
+  @JsonKey(name: 'firebase_uid')
   String? get firebaseUid;
   @override
+  @JsonKey(name: 'trial_ends_at')
+  DateTime? get trialEndsAt;
+  @override
+  @JsonKey(name: 'subscription_paid_until')
+  DateTime? get subscriptionPaidUntil;
+  @override
+  @JsonKey(name: 'subscription_active')
+  bool get subscriptionActive;
+  @override
+  @JsonKey(name: 'is_payment_locked')
+  bool get isPaymentLocked;
+  @override
+  @JsonKey(name: 'created_at')
   DateTime? get createdAt;
   @override
+  @JsonKey(name: 'updated_at')
   DateTime? get updatedAt;
 
   /// Create a copy of UserModel

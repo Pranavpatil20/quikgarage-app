@@ -25,6 +25,10 @@ class GarageModel with _$GarageModel {
     @JsonKey(name: 'default_service_cost', fromJson: _costFromJson)
     @Default('899.00')
     String defaultServiceCost,
+    @JsonKey(name: 'service_rates') @Default(<String, dynamic>{})
+    Map<String, dynamic> serviceRates,
+    @JsonKey(name: 'part_rates') @Default(<String, dynamic>{})
+    Map<String, dynamic> partRates,
     int? owner,
     @JsonKey(name: 'owner_name') String? ownerName,
     @JsonKey(name: 'created_at') DateTime? createdAt,

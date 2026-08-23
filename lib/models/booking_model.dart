@@ -21,6 +21,8 @@ class BookingModel with _$BookingModel {
     @JsonKey(name: 'booking_date') required String bookingDate,
     @JsonKey(name: 'time_slot') required String timeSlot,
     @Default('') String notes,
+    @JsonKey(name: 'service_items') @Default(<Map<String, dynamic>>[])
+    List<Map<String, dynamic>> serviceItems,
     @Default('pending') String status,
     @JsonKey(name: 'can_cancel') @Default(false) bool canCancel,
     @JsonKey(name: 'completed_at') DateTime? completedAt,

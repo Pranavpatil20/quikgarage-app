@@ -18,6 +18,11 @@ _$InvoiceModelImpl _$$InvoiceModelImplFromJson(Map<String, dynamic> json) =>
       serviceCost: json['service_cost'] as String? ?? '0.00',
       partsCost: json['parts_cost'] as String? ?? '0.00',
       totalAmount: json['total_amount'] as String? ?? '0.00',
+      lineItems:
+          (json['line_items'] as List<dynamic>?)
+              ?.map((e) => e as Map<String, dynamic>)
+              .toList() ??
+          const <Map<String, dynamic>>[],
       paymentStatus: json['payment_status'] as String? ?? 'pending',
       createdAt: json['createdAt'] == null
           ? null
@@ -32,6 +37,7 @@ Map<String, dynamic> _$$InvoiceModelImplToJson(_$InvoiceModelImpl instance) =>
       'service_cost': instance.serviceCost,
       'parts_cost': instance.partsCost,
       'total_amount': instance.totalAmount,
+      'line_items': instance.lineItems,
       'payment_status': instance.paymentStatus,
       'createdAt': instance.createdAt?.toIso8601String(),
     };

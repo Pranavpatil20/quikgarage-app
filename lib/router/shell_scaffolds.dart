@@ -24,6 +24,7 @@ class OwnerShell extends ConsumerWidget {
     if (location.startsWith('/owner/bookings/add')) return true;
     if (location.startsWith('/owner/notifications')) return true;
     if (location.startsWith('/owner/setup')) return true;
+    if (location.startsWith('/owner/payment-lock')) return true;
     if (RegExp(r'^/owner/customers/\d+').hasMatch(location)) return true;
     return false;
   }

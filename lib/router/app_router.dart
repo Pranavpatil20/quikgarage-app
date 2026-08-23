@@ -18,6 +18,7 @@ import '../features/owner/bookings/presentation/owner_bookings_screen.dart';
 import '../features/owner/customers/presentation/customer_management_screen.dart';
 import '../features/owner/dashboard/presentation/owner_dashboard_screen.dart';
 import '../features/owner/settings/presentation/owner_settings_screen.dart';
+import '../features/owner/subscription/presentation/owner_payment_lock_screen.dart';
 import '../models/user_model.dart';
 import 'shell_scaffolds.dart';
 
@@ -45,8 +46,18 @@ final routerProvider = Provider<GoRouter>((ref) {
       final user = authState.asData?.value;
 
       if (user == null && !isAuthRoute) return '/login';
+      if (user != null && user.isOwnerLocked && path != '/owner/payment-lock') {
+        return '/owner/payment-lock';
+      }
+      if (user != null &&
+          user.isOwner &&
+          !user.isPaymentLocked &&
+          path == '/owner/payment-lock') {
+        return '/owner';
+      }
       if (user != null && (path == '/login' || path == '/signup' || path == '/')) {
-        return user.isOwner ? '/owner' : '/customer';
+        if (user.isOwner) return ownerHomeRoute(user);
+        return '/customer';
       }
       return null;
     },
@@ -103,6 +114,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/owner/billing',
             builder: (_, __) => const BillingScreen(),
+          ),
+          GoRoute(
+            path: '/owner/payment-lock',
+            builder: (_, __) => const OwnerPaymentLockScreen(),
           ),
           GoRoute(
             path: '/owner/settings',

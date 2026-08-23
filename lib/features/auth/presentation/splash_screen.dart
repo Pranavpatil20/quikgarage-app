@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/api_constants.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../models/user_model.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/widgets/app_logo.dart';
 import '../../../theme/app_colors.dart';
@@ -73,7 +74,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     if (user == null) {
       context.go('/login');
     } else if (user.isOwner) {
-      context.go('/owner');
+      context.go(ownerHomeRoute(user));
     } else {
       context.go('/customer');
     }

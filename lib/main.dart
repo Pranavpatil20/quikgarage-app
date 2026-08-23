@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/providers/auth_provider.dart';
 import 'core/providers/locale_provider.dart';
+import 'core/subscription_lock_handler.dart';
 import 'firebase_options.dart';
 import 'l10n/app_strings.dart';
 import 'router/app_router.dart';
@@ -38,6 +39,9 @@ class _QuikGarageAppState extends ConsumerState<QuikGarageApp> {
   @override
   void initState() {
     super.initState();
+    onSubscriptionLockDetected = () {
+      ref.read(authStateProvider.notifier).refreshUser();
+    };
     Future.microtask(() => ref.read(fcmServiceProvider).initialize());
   }
 

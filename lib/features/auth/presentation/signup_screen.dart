@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/garage_provider.dart';
+import '../../../models/user_model.dart';
 import '../../../theme/app_colors.dart';
 
 class SignUpScreen extends ConsumerStatefulWidget {
@@ -103,8 +104,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
       ref.invalidate(myGarageProvider);
       ref.invalidate(garagesProvider);
       if (!mounted) return;
+      final user = ref.read(authStateProvider).value;
       if (_selectedRole == 'owner') {
-        context.go('/owner');
+        context.go(user != null ? ownerHomeRoute(user) : '/owner');
       } else {
         context.go('/customer');
       }

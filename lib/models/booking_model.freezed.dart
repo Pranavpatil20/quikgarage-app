@@ -38,6 +38,9 @@ mixin _$BookingModel {
   @JsonKey(name: 'time_slot')
   String get timeSlot => throw _privateConstructorUsedError;
   String get notes => throw _privateConstructorUsedError;
+  @JsonKey(name: 'service_items')
+  List<Map<String, dynamic>> get serviceItems =>
+      throw _privateConstructorUsedError;
   String get status => throw _privateConstructorUsedError;
   @JsonKey(name: 'can_cancel')
   bool get canCancel => throw _privateConstructorUsedError;
@@ -77,6 +80,7 @@ abstract class $BookingModelCopyWith<$Res> {
     @JsonKey(name: 'booking_date') String bookingDate,
     @JsonKey(name: 'time_slot') String timeSlot,
     String notes,
+    @JsonKey(name: 'service_items') List<Map<String, dynamic>> serviceItems,
     String status,
     @JsonKey(name: 'can_cancel') bool canCancel,
     @JsonKey(name: 'completed_at') DateTime? completedAt,
@@ -115,6 +119,7 @@ class _$BookingModelCopyWithImpl<$Res, $Val extends BookingModel>
     Object? bookingDate = null,
     Object? timeSlot = null,
     Object? notes = null,
+    Object? serviceItems = null,
     Object? status = null,
     Object? canCancel = null,
     Object? completedAt = freezed,
@@ -167,6 +172,10 @@ class _$BookingModelCopyWithImpl<$Res, $Val extends BookingModel>
                 ? _value.notes
                 : notes // ignore: cast_nullable_to_non_nullable
                       as String,
+            serviceItems: null == serviceItems
+                ? _value.serviceItems
+                : serviceItems // ignore: cast_nullable_to_non_nullable
+                      as List<Map<String, dynamic>>,
             status: null == status
                 ? _value.status
                 : status // ignore: cast_nullable_to_non_nullable
@@ -256,6 +265,7 @@ abstract class _$$BookingModelImplCopyWith<$Res>
     @JsonKey(name: 'booking_date') String bookingDate,
     @JsonKey(name: 'time_slot') String timeSlot,
     String notes,
+    @JsonKey(name: 'service_items') List<Map<String, dynamic>> serviceItems,
     String status,
     @JsonKey(name: 'can_cancel') bool canCancel,
     @JsonKey(name: 'completed_at') DateTime? completedAt,
@@ -296,6 +306,7 @@ class __$$BookingModelImplCopyWithImpl<$Res>
     Object? bookingDate = null,
     Object? timeSlot = null,
     Object? notes = null,
+    Object? serviceItems = null,
     Object? status = null,
     Object? canCancel = null,
     Object? completedAt = freezed,
@@ -348,6 +359,10 @@ class __$$BookingModelImplCopyWithImpl<$Res>
             ? _value.notes
             : notes // ignore: cast_nullable_to_non_nullable
                   as String,
+        serviceItems: null == serviceItems
+            ? _value._serviceItems
+            : serviceItems // ignore: cast_nullable_to_non_nullable
+                  as List<Map<String, dynamic>>,
         status: null == status
             ? _value.status
             : status // ignore: cast_nullable_to_non_nullable
@@ -388,12 +403,15 @@ class _$BookingModelImpl implements _BookingModel {
     @JsonKey(name: 'booking_date') required this.bookingDate,
     @JsonKey(name: 'time_slot') required this.timeSlot,
     this.notes = '',
+    @JsonKey(name: 'service_items')
+    final List<Map<String, dynamic>> serviceItems =
+        const <Map<String, dynamic>>[],
     this.status = 'pending',
     @JsonKey(name: 'can_cancel') this.canCancel = false,
     @JsonKey(name: 'completed_at') this.completedAt,
     @JsonKey(name: 'created_at') this.createdAt,
     @JsonKey(name: 'updated_at') this.updatedAt,
-  });
+  }) : _serviceItems = serviceItems;
 
   factory _$BookingModelImpl.fromJson(Map<String, dynamic> json) =>
       _$$BookingModelImplFromJson(json);
@@ -427,6 +445,15 @@ class _$BookingModelImpl implements _BookingModel {
   @override
   @JsonKey()
   final String notes;
+  final List<Map<String, dynamic>> _serviceItems;
+  @override
+  @JsonKey(name: 'service_items')
+  List<Map<String, dynamic>> get serviceItems {
+    if (_serviceItems is EqualUnmodifiableListView) return _serviceItems;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_serviceItems);
+  }
+
   @override
   @JsonKey()
   final String status;
@@ -445,7 +472,7 @@ class _$BookingModelImpl implements _BookingModel {
 
   @override
   String toString() {
-    return 'BookingModel(id: $id, customer: $customer, customerDetail: $customerDetail, garage: $garage, garageDetail: $garageDetail, vehicle: $vehicle, vehicleDetail: $vehicleDetail, serviceType: $serviceType, bookingDate: $bookingDate, timeSlot: $timeSlot, notes: $notes, status: $status, canCancel: $canCancel, completedAt: $completedAt, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'BookingModel(id: $id, customer: $customer, customerDetail: $customerDetail, garage: $garage, garageDetail: $garageDetail, vehicle: $vehicle, vehicleDetail: $vehicleDetail, serviceType: $serviceType, bookingDate: $bookingDate, timeSlot: $timeSlot, notes: $notes, serviceItems: $serviceItems, status: $status, canCancel: $canCancel, completedAt: $completedAt, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -471,6 +498,10 @@ class _$BookingModelImpl implements _BookingModel {
             (identical(other.timeSlot, timeSlot) ||
                 other.timeSlot == timeSlot) &&
             (identical(other.notes, notes) || other.notes == notes) &&
+            const DeepCollectionEquality().equals(
+              other._serviceItems,
+              _serviceItems,
+            ) &&
             (identical(other.status, status) || other.status == status) &&
             (identical(other.canCancel, canCancel) ||
                 other.canCancel == canCancel) &&
@@ -497,6 +528,7 @@ class _$BookingModelImpl implements _BookingModel {
     bookingDate,
     timeSlot,
     notes,
+    const DeepCollectionEquality().hash(_serviceItems),
     status,
     canCancel,
     completedAt,
@@ -531,6 +563,8 @@ abstract class _BookingModel implements BookingModel {
     @JsonKey(name: 'booking_date') required final String bookingDate,
     @JsonKey(name: 'time_slot') required final String timeSlot,
     final String notes,
+    @JsonKey(name: 'service_items')
+    final List<Map<String, dynamic>> serviceItems,
     final String status,
     @JsonKey(name: 'can_cancel') final bool canCancel,
     @JsonKey(name: 'completed_at') final DateTime? completedAt,
@@ -569,6 +603,9 @@ abstract class _BookingModel implements BookingModel {
   String get timeSlot;
   @override
   String get notes;
+  @override
+  @JsonKey(name: 'service_items')
+  List<Map<String, dynamic>> get serviceItems;
   @override
   String get status;
   @override

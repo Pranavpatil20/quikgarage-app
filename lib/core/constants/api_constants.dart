@@ -28,6 +28,7 @@ class ApiConstants {
   static const String dashboardMetrics = '/dashboard/owner/metrics/';
 
   static String bookingStatus(int id) => '/bookings/owner/$id/status/';
+  static String bookingServiceItems(int id) => '/bookings/owner/$id/service-items/';
   static String availableSlots(int garageId) => '/bookings/slots/$garageId/';
   static String notificationRead(int id) => '/notifications/$id/read/';
 }

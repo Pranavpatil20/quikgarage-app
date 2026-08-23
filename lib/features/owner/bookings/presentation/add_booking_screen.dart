@@ -24,7 +24,8 @@ class _AddBookingScreenState extends ConsumerState<AddBookingScreen> {
   final _vehicleController = TextEditingController();
   final _makeModelController = TextEditingController();
   final _notesController = TextEditingController();
-  String _serviceType = 'general_service';
+  final Set<String> _selectedServiceTypes = {'general_service'};
+  String _vehicleType = 'bike';
   DateTime _date = DateTime.now();
   TimeOfDay _time = AppDateUtils.nextAvailableTime();
   bool _loading = false;
@@ -107,6 +108,10 @@ class _AddBookingScreenState extends ConsumerState<AddBookingScreen> {
       _showMessage('Phone and vehicle number required');
       return;
     }
+    if (_selectedServiceTypes.isEmpty) {
+      _showMessage('Select at least one service type');
+      return;
+    }
     if (_isPastSelection) {
       _showMessage('Cannot create a booking in the past');
       return;
@@ -123,7 +128,8 @@ class _AddBookingScreenState extends ConsumerState<AddBookingScreen> {
         'customer_phone': _phoneController.text.trim(),
         'vehicle_number': _vehicleController.text.trim().toUpperCase(),
         'make_model': _makeModelController.text.trim(),
-        'service_type': _serviceType,
+        'vehicle_type': _vehicleType,
+        'service_type': _selectedServiceTypes.join(','),
         'booking_date': AppDateUtils.toApiDate(_date),
         'time_slot':
             '${_time.hour.toString().padLeft(2, '0')}:${_time.minute.toString().padLeft(2, '0')}:00',
@@ -206,6 +212,32 @@ class _AddBookingScreenState extends ConsumerState<AddBookingScreen> {
                 ),
               ),
               const SizedBox(height: 16),
+              Text('Vehicle type', style: theme.textTheme.titleSmall),
+              const SizedBox(height: 8),
+              SegmentedButton<String>(
+                segments: const [
+                  ButtonSegment(
+                    value: 'bike',
+                    label: Text('Bike'),
+                    icon: Icon(Icons.two_wheeler),
+                  ),
+                  ButtonSegment(
+                    value: 'car',
+                    label: Text('Car'),
+                    icon: Icon(Icons.directions_car),
+                  ),
+                ],
+                selected: {_vehicleType},
+                onSelectionChanged: (v) => setState(() {
+                  _vehicleType = v.first;
+                  final allowed = AppConstants.serviceTypesForVehicle(_vehicleType);
+                  _selectedServiceTypes.removeWhere((t) => !allowed.contains(t));
+                  if (_selectedServiceTypes.isEmpty) {
+                    _selectedServiceTypes.add('general_service');
+                  }
+                }),
+              ),
+              const SizedBox(height: 16),
               MicTextField(
                 controller: _vehicleController,
                 textCapitalization: TextCapitalization.characters,
@@ -223,34 +255,34 @@ class _AddBookingScreenState extends ConsumerState<AddBookingScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                initialValue: _serviceType,
-                dropdownColor: theme.colorScheme.surfaceContainerHighest,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurface,
+              Text('Service type', style: theme.textTheme.titleSmall),
+              const SizedBox(height: 4),
+              Text(
+                'You can select more than one',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
-                decoration: InputDecoration(
-                  labelText: 'Service Type',
-                  labelStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant),
-                  prefixIcon: Icon(
-                    Icons.build_circle_outlined,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                items: AppConstants.serviceTypes
-                    .map(
-                      (s) => DropdownMenuItem(
-                        value: s,
-                        child: Text(
-                          AppConstants.serviceTypeLabels[s] ?? s,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurface,
-                          ),
-                        ),
-                      ),
-                    )
-                    .toList(),
-                onChanged: (v) => setState(() => _serviceType = v!),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: AppConstants.serviceTypesForVehicle(_vehicleType).map((type) {
+                  final selected = _selectedServiceTypes.contains(type);
+                  return FilterChip(
+                    label: Text(
+                      AppConstants.serviceTypeLabel(type, vehicleType: _vehicleType),
+                    ),
+                    selected: selected,
+                    onSelected: (v) => setState(() {
+                      if (v) {
+                        _selectedServiceTypes.add(type);
+                      } else {
+                        _selectedServiceTypes.remove(type);
+                      }
+                    }),
+                  );
+                }).toList(),
               ),
               const SizedBox(height: 16),
               ListTile(

@@ -4,8 +4,8 @@ import '../../models/auth_response.dart';
 import '../../models/user_model.dart';
 import '../../repositories/auth_repository.dart';
 import '../../repositories/user_repository.dart';
-import '../../services/api_client.dart';
 import '../../services/storage_service.dart';
+import 'storage_provider.dart';
 
 /// Current logged-in user id — data providers watch this so Owner A/B never share cache.
 final currentUserIdProvider = Provider<int?>((ref) {

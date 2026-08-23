@@ -18,6 +18,6 @@ Map<String, dynamic> _$$AuthResponseImplToJson(_$AuthResponseImpl instance) =>
     <String, dynamic>{
       'access': instance.access,
       'refresh': instance.refresh,
-      'user': instance.user.toJson(),
+      'user': instance.user,
       'is_new_user': instance.isNewUser,
     };

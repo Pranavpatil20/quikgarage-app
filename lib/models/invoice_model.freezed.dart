@@ -31,6 +31,9 @@ mixin _$InvoiceModel {
   String get partsCost => throw _privateConstructorUsedError;
   @JsonKey(name: 'total_amount')
   String get totalAmount => throw _privateConstructorUsedError;
+  @JsonKey(name: 'line_items')
+  List<Map<String, dynamic>> get lineItems =>
+      throw _privateConstructorUsedError;
   @JsonKey(name: 'payment_status')
   String get paymentStatus => throw _privateConstructorUsedError;
   DateTime? get createdAt => throw _privateConstructorUsedError;
@@ -59,6 +62,7 @@ abstract class $InvoiceModelCopyWith<$Res> {
     @JsonKey(name: 'service_cost') String serviceCost,
     @JsonKey(name: 'parts_cost') String partsCost,
     @JsonKey(name: 'total_amount') String totalAmount,
+    @JsonKey(name: 'line_items') List<Map<String, dynamic>> lineItems,
     @JsonKey(name: 'payment_status') String paymentStatus,
     DateTime? createdAt,
   });
@@ -87,6 +91,7 @@ class _$InvoiceModelCopyWithImpl<$Res, $Val extends InvoiceModel>
     Object? serviceCost = null,
     Object? partsCost = null,
     Object? totalAmount = null,
+    Object? lineItems = null,
     Object? paymentStatus = null,
     Object? createdAt = freezed,
   }) {
@@ -116,6 +121,10 @@ class _$InvoiceModelCopyWithImpl<$Res, $Val extends InvoiceModel>
                 ? _value.totalAmount
                 : totalAmount // ignore: cast_nullable_to_non_nullable
                       as String,
+            lineItems: null == lineItems
+                ? _value.lineItems
+                : lineItems // ignore: cast_nullable_to_non_nullable
+                      as List<Map<String, dynamic>>,
             paymentStatus: null == paymentStatus
                 ? _value.paymentStatus
                 : paymentStatus // ignore: cast_nullable_to_non_nullable
@@ -160,6 +169,7 @@ abstract class _$$InvoiceModelImplCopyWith<$Res>
     @JsonKey(name: 'service_cost') String serviceCost,
     @JsonKey(name: 'parts_cost') String partsCost,
     @JsonKey(name: 'total_amount') String totalAmount,
+    @JsonKey(name: 'line_items') List<Map<String, dynamic>> lineItems,
     @JsonKey(name: 'payment_status') String paymentStatus,
     DateTime? createdAt,
   });
@@ -188,6 +198,7 @@ class __$$InvoiceModelImplCopyWithImpl<$Res>
     Object? serviceCost = null,
     Object? partsCost = null,
     Object? totalAmount = null,
+    Object? lineItems = null,
     Object? paymentStatus = null,
     Object? createdAt = freezed,
   }) {
@@ -217,6 +228,10 @@ class __$$InvoiceModelImplCopyWithImpl<$Res>
             ? _value.totalAmount
             : totalAmount // ignore: cast_nullable_to_non_nullable
                   as String,
+        lineItems: null == lineItems
+            ? _value._lineItems
+            : lineItems // ignore: cast_nullable_to_non_nullable
+                  as List<Map<String, dynamic>>,
         paymentStatus: null == paymentStatus
             ? _value.paymentStatus
             : paymentStatus // ignore: cast_nullable_to_non_nullable
@@ -240,9 +255,11 @@ class _$InvoiceModelImpl implements _InvoiceModel {
     @JsonKey(name: 'service_cost') this.serviceCost = '0.00',
     @JsonKey(name: 'parts_cost') this.partsCost = '0.00',
     @JsonKey(name: 'total_amount') this.totalAmount = '0.00',
+    @JsonKey(name: 'line_items')
+    final List<Map<String, dynamic>> lineItems = const <Map<String, dynamic>>[],
     @JsonKey(name: 'payment_status') this.paymentStatus = 'pending',
     this.createdAt,
-  });
+  }) : _lineItems = lineItems;
 
   factory _$InvoiceModelImpl.fromJson(Map<String, dynamic> json) =>
       _$$InvoiceModelImplFromJson(json);
@@ -263,6 +280,15 @@ class _$InvoiceModelImpl implements _InvoiceModel {
   @override
   @JsonKey(name: 'total_amount')
   final String totalAmount;
+  final List<Map<String, dynamic>> _lineItems;
+  @override
+  @JsonKey(name: 'line_items')
+  List<Map<String, dynamic>> get lineItems {
+    if (_lineItems is EqualUnmodifiableListView) return _lineItems;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_lineItems);
+  }
+
   @override
   @JsonKey(name: 'payment_status')
   final String paymentStatus;
@@ -271,7 +297,7 @@ class _$InvoiceModelImpl implements _InvoiceModel {
 
   @override
   String toString() {
-    return 'InvoiceModel(id: $id, booking: $booking, bookingDetail: $bookingDetail, serviceCost: $serviceCost, partsCost: $partsCost, totalAmount: $totalAmount, paymentStatus: $paymentStatus, createdAt: $createdAt)';
+    return 'InvoiceModel(id: $id, booking: $booking, bookingDetail: $bookingDetail, serviceCost: $serviceCost, partsCost: $partsCost, totalAmount: $totalAmount, lineItems: $lineItems, paymentStatus: $paymentStatus, createdAt: $createdAt)';
   }
 
   @override
@@ -289,6 +315,10 @@ class _$InvoiceModelImpl implements _InvoiceModel {
                 other.partsCost == partsCost) &&
             (identical(other.totalAmount, totalAmount) ||
                 other.totalAmount == totalAmount) &&
+            const DeepCollectionEquality().equals(
+              other._lineItems,
+              _lineItems,
+            ) &&
             (identical(other.paymentStatus, paymentStatus) ||
                 other.paymentStatus == paymentStatus) &&
             (identical(other.createdAt, createdAt) ||
@@ -305,6 +335,7 @@ class _$InvoiceModelImpl implements _InvoiceModel {
     serviceCost,
     partsCost,
     totalAmount,
+    const DeepCollectionEquality().hash(_lineItems),
     paymentStatus,
     createdAt,
   );
@@ -331,6 +362,7 @@ abstract class _InvoiceModel implements InvoiceModel {
     @JsonKey(name: 'service_cost') final String serviceCost,
     @JsonKey(name: 'parts_cost') final String partsCost,
     @JsonKey(name: 'total_amount') final String totalAmount,
+    @JsonKey(name: 'line_items') final List<Map<String, dynamic>> lineItems,
     @JsonKey(name: 'payment_status') final String paymentStatus,
     final DateTime? createdAt,
   }) = _$InvoiceModelImpl;
@@ -354,6 +386,9 @@ abstract class _InvoiceModel implements InvoiceModel {
   @override
   @JsonKey(name: 'total_amount')
   String get totalAmount;
+  @override
+  @JsonKey(name: 'line_items')
+  List<Map<String, dynamic>> get lineItems;
   @override
   @JsonKey(name: 'payment_status')
   String get paymentStatus;

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../l10n/app_strings.dart';
 import '../../models/booking_model.dart';
@@ -13,12 +14,19 @@ class BookingCard extends StatelessWidget {
     this.onTap,
     this.onWhatsApp,
     this.trailing,
+    this.showGarageDetails = false,
   });
 
   final BookingModel booking;
   final VoidCallback? onTap;
   final VoidCallback? onWhatsApp;
   final Widget? trailing;
+  final bool showGarageDetails;
+
+  Future<void> _call(String phone) async {
+    final uri = Uri(scheme: 'tel', path: phone);
+    await launchUrl(uri);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,12 +35,16 @@ class BookingCard extends StatelessWidget {
     final locale = Localizations.localeOf(context).toString();
     final vehicle = booking.vehicleDetail;
     final customer = booking.customerDetail;
+    final garage = booking.garageDetail;
     final dateTimeText = AppDateUtils.formatBookingDateTime(
       booking.bookingDate,
       booking.timeSlot,
       locale: locale,
     );
-    final serviceLabel = s.serviceType(booking.serviceType);
+    final serviceLabel = s.serviceType(
+      booking.serviceType,
+      vehicleType: vehicle?.vehicleType,
+    );
 
     return GlassCard(
       onTap: onTap,
@@ -117,6 +129,73 @@ class BookingCard extends StatelessWidget {
               color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
+          if (showGarageDetails && garage != null) ...[
+            const SizedBox(height: 10),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: theme.colorScheme.outlineVariant),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    garage.garageName,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  if (garage.address.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          Icons.location_on_outlined,
+                          size: 16,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            garage.address,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                  if ((garage.ownerPhone ?? '').trim().isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    InkWell(
+                      onTap: () => _call(garage.ownerPhone!.trim()),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.phone_outlined,
+                            size: 16,
+                            color: theme.colorScheme.primary,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            garage.ownerPhone!.trim(),
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
           if (booking.notes.trim().isNotEmpty) ...[
             const SizedBox(height: 8),
             Row(

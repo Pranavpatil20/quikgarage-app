@@ -80,6 +80,9 @@ _$AvailableSlotsResponseImpl _$$AvailableSlotsResponseImplFromJson(
 ) => _$AvailableSlotsResponseImpl(
   garageId: (json['garage_id'] as num).toInt(),
   date: json['date'] as String,
+  closed: json['closed'] as bool? ?? false,
+  openingTime: json['opening_time'] as String?,
+  closingTime: json['closing_time'] as String?,
   slots: (json['slots'] as List<dynamic>)
       .map((e) => TimeSlotModel.fromJson(e as Map<String, dynamic>))
       .toList(),
@@ -90,5 +93,8 @@ Map<String, dynamic> _$$AvailableSlotsResponseImplToJson(
 ) => <String, dynamic>{
   'garage_id': instance.garageId,
   'date': instance.date,
+  'closed': instance.closed,
+  'opening_time': instance.openingTime,
+  'closing_time': instance.closingTime,
   'slots': instance.slots,
 };

@@ -21,6 +21,10 @@ class _EditInvoiceScreenState extends ConsumerState<EditInvoiceScreen> {
   late List<ServiceLineItem> _items;
   bool _saving = false;
 
+  String get _vehicleType =>
+      widget.invoice.bookingDetail?.vehicleDetail?.vehicleType.toLowerCase() ??
+      'bike';
+
   @override
   void initState() {
     super.initState();
@@ -61,7 +65,25 @@ class _EditInvoiceScreenState extends ConsumerState<EditInvoiceScreen> {
   }
 
   Future<void> _save() async {
-    setState(() => _saving = true);
+    final cleaned = _items
+        .map((e) {
+          final name = e.name.trim();
+          if (name.isEmpty) return null;
+          e.name = name;
+          return e;
+        })
+        .whereType<ServiceLineItem>()
+        .toList();
+    if (cleaned.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Add at least one named line item')),
+      );
+      return;
+    }
+    setState(() {
+      _items = cleaned;
+      _saving = true;
+    });
     try {
       final payload = _items.map((e) => e.toJson()).toList();
       await ref.read(invoiceRepositoryProvider).updateInvoice(
@@ -81,6 +103,17 @@ class _EditInvoiceScreenState extends ConsumerState<EditInvoiceScreen> {
       }
     } finally {
       if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  Future<void> _showAddLineDialog() async {
+    final added = await showDialog<ServiceLineItem>(
+      context: context,
+      builder: (ctx) => _AddInvoiceLineDialog(vehicleType: _vehicleType),
+    );
+
+    if (added != null && mounted) {
+      setState(() => _items.add(added));
     }
   }
 
@@ -108,7 +141,7 @@ class _EditInvoiceScreenState extends ConsumerState<EditInvoiceScreen> {
         padding: const EdgeInsets.all(16),
         children: [
           Text(
-            'Update qty and rate for each line. Service and parts both appear here.',
+            'Update name, qty and rate for each line. Service and parts both appear here.',
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -117,28 +150,39 @@ class _EditInvoiceScreenState extends ConsumerState<EditInvoiceScreen> {
           ...List.generate(_items.length, (i) {
             final item = _items[i];
             return Padding(
+              key: ValueKey('invoice-line-$i-${item.category}-${item.name}'),
               padding: const EdgeInsets.only(bottom: 10),
               child: GlassCard(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
-                          child: Text(
-                            item.name,
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w600,
+                          child: TextFormField(
+                            initialValue: item.name,
+                            decoration: const InputDecoration(
+                              labelText: 'Item name',
+                              isDense: true,
                             ),
+                            onChanged: (v) => item.name = v,
                           ),
                         ),
                         IconButton(
+                          tooltip: 'Remove line',
                           icon: const Icon(Icons.delete_outline),
                           onPressed: () => setState(() => _items.removeAt(i)),
                         ),
                       ],
                     ),
-                    Text(item.category.toUpperCase()),
+                    const SizedBox(height: 4),
+                    Text(
+                      item.category.toUpperCase(),
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
                     const SizedBox(height: 8),
                     Row(
                       children: [
@@ -147,27 +191,29 @@ class _EditInvoiceScreenState extends ConsumerState<EditInvoiceScreen> {
                             initialValue: item.qty.toString(),
                             decoration: const InputDecoration(labelText: 'Qty'),
                             keyboardType: TextInputType.number,
-                            onChanged: (v) => setState(() {
+                            onChanged: (v) {
                               item.qty = double.tryParse(v) ?? 1;
-                            }),
+                              setState(() {});
+                            },
                           ),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: TextFormField(
                             initialValue: item.rate.toStringAsFixed(2),
-                            decoration: const InputDecoration(labelText: 'Rate ₹'),
+                            decoration: const InputDecoration(labelText: 'Rate (Rs.)'),
                             keyboardType: TextInputType.number,
-                            onChanged: (v) => setState(() {
+                            onChanged: (v) {
                               item.rate = double.tryParse(v) ?? 0;
-                            }),
+                              setState(() {});
+                            },
                           ),
                         ),
                       ],
                     ),
                     Align(
                       alignment: Alignment.centerRight,
-                      child: Text('₹${item.amount.toStringAsFixed(2)}'),
+                      child: Text('Rs.${item.amount.toStringAsFixed(2)}'),
                     ),
                   ],
                 ),
@@ -175,25 +221,22 @@ class _EditInvoiceScreenState extends ConsumerState<EditInvoiceScreen> {
             );
           }),
           TextButton.icon(
-            onPressed: () {
-              setState(() {
-                _items.add(ServiceLineItem(
-                  name: 'Custom item',
-                  category: 'parts',
-                  rate: 0,
-                ));
-              });
-            },
+            onPressed: _showAddLineDialog,
             icon: const Icon(Icons.add),
             label: const Text('Add line'),
           ),
           const SizedBox(height: 16),
-          Text('Service / Labour: ₹${serviceTotal.toStringAsFixed(2)}'),
-          Text('Parts: ₹${partsTotal.toStringAsFixed(2)}'),
-          const SizedBox(height: 8),
-          Text(
-            '${s.total}: ₹${total.toStringAsFixed(2)}',
-            style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+          GlassCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _totalRow(theme, 'Service / Labour', serviceTotal),
+                const SizedBox(height: 6),
+                _totalRow(theme, 'Parts', partsTotal),
+                const Divider(height: 20),
+                _totalRow(theme, s.total, total, bold: true),
+              ],
+            ),
           ),
           const SizedBox(height: 16),
           FilledButton(
@@ -202,6 +245,163 @@ class _EditInvoiceScreenState extends ConsumerState<EditInvoiceScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _totalRow(ThemeData theme, String label, double amount, {bool bold = false}) {
+    final style = bold
+        ? theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)
+        : theme.textTheme.bodyMedium;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Expanded(child: Text(label, style: style)),
+        Text('Rs.${amount.toStringAsFixed(2)}', style: style),
+      ],
+    );
+  }
+}
+
+class _AddInvoiceLineDialog extends StatefulWidget {
+  const _AddInvoiceLineDialog({required this.vehicleType});
+
+  final String vehicleType;
+
+  @override
+  State<_AddInvoiceLineDialog> createState() => _AddInvoiceLineDialogState();
+}
+
+class _AddInvoiceLineDialogState extends State<_AddInvoiceLineDialog> {
+  late final TextEditingController _nameController;
+  late final TextEditingController _rateController;
+  late final TextEditingController _searchController;
+  String _category = 'parts';
+  String _query = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController();
+    _rateController = TextEditingController(text: '0');
+    _searchController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _rateController.dispose();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _addManual() {
+    final name = _nameController.text.trim();
+    if (name.isEmpty) return;
+    Navigator.pop(
+      context,
+      ServiceLineItem(
+        name: name,
+        category: _category,
+        qty: 1,
+        rate: double.tryParse(_rateController.text) ?? 0,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final catalog = PartsCatalog.forVehicle(widget.vehicleType, query: _query);
+
+    return AlertDialog(
+      title: const Text('Add line item'),
+      content: SizedBox(
+        width: 420,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextField(
+                controller: _searchController,
+                decoration: const InputDecoration(
+                  labelText: 'Search parts catalog',
+                  prefixIcon: Icon(Icons.search),
+                ),
+                onChanged: (v) => setState(() => _query = v),
+              ),
+              if (_query.trim().isNotEmpty) ...[
+                const SizedBox(height: 8),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 160),
+                  child: ListView(
+                    shrinkWrap: true,
+                    children: catalog.take(8).map((p) {
+                      return ListTile(
+                        dense: true,
+                        title: Text(p.name),
+                        subtitle: Text(p.category),
+                        trailing: Text('Rs.${p.defaultRate.toStringAsFixed(0)}'),
+                        onTap: () {
+                          Navigator.pop(
+                            context,
+                            ServiceLineItem(
+                              name: p.name,
+                              category: p.category,
+                              qty: 1,
+                              rate: p.defaultRate,
+                            ),
+                          );
+                        },
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 12),
+              const Divider(),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Item name',
+                  hintText: 'e.g. Engine Oil 10W40',
+                ),
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                initialValue: _category,
+                decoration: const InputDecoration(labelText: 'Category'),
+                items: const [
+                  DropdownMenuItem(value: 'lubricant', child: Text('Lubricant')),
+                  DropdownMenuItem(value: 'parts', child: Text('Parts')),
+                  DropdownMenuItem(value: 'labour', child: Text('Labour')),
+                ],
+                onChanged: (v) {
+                  if (v != null) setState(() => _category = v);
+                },
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _rateController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Rate (Rs.)',
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: _addManual,
+          child: const Text('Add'),
+        ),
+      ],
     );
   }
 }

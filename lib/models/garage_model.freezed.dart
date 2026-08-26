@@ -29,6 +29,8 @@ mixin _$GarageModel {
   String get openingTime => throw _privateConstructorUsedError;
   @JsonKey(name: 'closing_time')
   String get closingTime => throw _privateConstructorUsedError;
+  @JsonKey(name: 'weekly_hours', fromJson: _weeklyHoursFromJson)
+  Map<String, dynamic> get weeklyHours => throw _privateConstructorUsedError;
   @JsonKey(name: 'default_service_cost', fromJson: _costFromJson)
   String get defaultServiceCost => throw _privateConstructorUsedError;
   @JsonKey(name: 'service_rates')
@@ -38,14 +40,13 @@ mixin _$GarageModel {
   int? get owner => throw _privateConstructorUsedError;
   @JsonKey(name: 'owner_name')
   String? get ownerName => throw _privateConstructorUsedError;
+  @JsonKey(name: 'owner_phone')
+  String? get ownerPhone => throw _privateConstructorUsedError;
   @JsonKey(name: 'created_at')
   DateTime? get createdAt => throw _privateConstructorUsedError;
 
-  /// Serializes this GarageModel to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
 
-  /// Create a copy of GarageModel
-  /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
   $GarageModelCopyWith<GarageModel> get copyWith =>
       throw _privateConstructorUsedError;
@@ -64,12 +65,15 @@ abstract class $GarageModelCopyWith<$Res> {
     String address,
     @JsonKey(name: 'opening_time') String openingTime,
     @JsonKey(name: 'closing_time') String closingTime,
+    @JsonKey(name: 'weekly_hours', fromJson: _weeklyHoursFromJson)
+    Map<String, dynamic> weeklyHours,
     @JsonKey(name: 'default_service_cost', fromJson: _costFromJson)
     String defaultServiceCost,
     @JsonKey(name: 'service_rates') Map<String, dynamic> serviceRates,
     @JsonKey(name: 'part_rates') Map<String, dynamic> partRates,
     int? owner,
     @JsonKey(name: 'owner_name') String? ownerName,
+    @JsonKey(name: 'owner_phone') String? ownerPhone,
     @JsonKey(name: 'created_at') DateTime? createdAt,
   });
 }
@@ -79,13 +83,9 @@ class _$GarageModelCopyWithImpl<$Res, $Val extends GarageModel>
     implements $GarageModelCopyWith<$Res> {
   _$GarageModelCopyWithImpl(this._value, this._then);
 
-  // ignore: unused_field
   final $Val _value;
-  // ignore: unused_field
   final $Res Function($Val) _then;
 
-  /// Create a copy of GarageModel
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -94,59 +94,49 @@ class _$GarageModelCopyWithImpl<$Res, $Val extends GarageModel>
     Object? address = null,
     Object? openingTime = null,
     Object? closingTime = null,
+    Object? weeklyHours = null,
     Object? defaultServiceCost = null,
     Object? serviceRates = null,
     Object? partRates = null,
     Object? owner = freezed,
     Object? ownerName = freezed,
+    Object? ownerPhone = freezed,
     Object? createdAt = freezed,
   }) {
     return _then(
       _value.copyWith(
-            id: null == id
-                ? _value.id
-                : id // ignore: cast_nullable_to_non_nullable
-                      as int,
+            id: null == id ? _value.id : id as int,
             garageName: null == garageName
                 ? _value.garageName
-                : garageName // ignore: cast_nullable_to_non_nullable
-                      as String,
-            address: null == address
-                ? _value.address
-                : address // ignore: cast_nullable_to_non_nullable
-                      as String,
+                : garageName as String,
+            address: null == address ? _value.address : address as String,
             openingTime: null == openingTime
                 ? _value.openingTime
-                : openingTime // ignore: cast_nullable_to_non_nullable
-                      as String,
+                : openingTime as String,
             closingTime: null == closingTime
                 ? _value.closingTime
-                : closingTime // ignore: cast_nullable_to_non_nullable
-                      as String,
+                : closingTime as String,
+            weeklyHours: null == weeklyHours
+                ? _value.weeklyHours
+                : weeklyHours as Map<String, dynamic>,
             defaultServiceCost: null == defaultServiceCost
                 ? _value.defaultServiceCost
-                : defaultServiceCost // ignore: cast_nullable_to_non_nullable
-                      as String,
+                : defaultServiceCost as String,
             serviceRates: null == serviceRates
                 ? _value.serviceRates
-                : serviceRates // ignore: cast_nullable_to_non_nullable
-                      as Map<String, dynamic>,
+                : serviceRates as Map<String, dynamic>,
             partRates: null == partRates
                 ? _value.partRates
-                : partRates // ignore: cast_nullable_to_non_nullable
-                      as Map<String, dynamic>,
-            owner: freezed == owner
-                ? _value.owner
-                : owner // ignore: cast_nullable_to_non_nullable
-                      as int?,
-            ownerName: freezed == ownerName
-                ? _value.ownerName
-                : ownerName // ignore: cast_nullable_to_non_nullable
-                      as String?,
+                : partRates as Map<String, dynamic>,
+            owner: freezed == owner ? _value.owner : owner as int?,
+            ownerName:
+                freezed == ownerName ? _value.ownerName : ownerName as String?,
+            ownerPhone: freezed == ownerPhone
+                ? _value.ownerPhone
+                : ownerPhone as String?,
             createdAt: freezed == createdAt
                 ? _value.createdAt
-                : createdAt // ignore: cast_nullable_to_non_nullable
-                      as DateTime?,
+                : createdAt as DateTime?,
           )
           as $Val,
     );
@@ -168,12 +158,15 @@ abstract class _$$GarageModelImplCopyWith<$Res>
     String address,
     @JsonKey(name: 'opening_time') String openingTime,
     @JsonKey(name: 'closing_time') String closingTime,
+    @JsonKey(name: 'weekly_hours', fromJson: _weeklyHoursFromJson)
+    Map<String, dynamic> weeklyHours,
     @JsonKey(name: 'default_service_cost', fromJson: _costFromJson)
     String defaultServiceCost,
     @JsonKey(name: 'service_rates') Map<String, dynamic> serviceRates,
     @JsonKey(name: 'part_rates') Map<String, dynamic> partRates,
     int? owner,
     @JsonKey(name: 'owner_name') String? ownerName,
+    @JsonKey(name: 'owner_phone') String? ownerPhone,
     @JsonKey(name: 'created_at') DateTime? createdAt,
   });
 }
@@ -187,8 +180,6 @@ class __$$GarageModelImplCopyWithImpl<$Res>
     $Res Function(_$GarageModelImpl) _then,
   ) : super(_value, _then);
 
-  /// Create a copy of GarageModel
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -197,59 +188,47 @@ class __$$GarageModelImplCopyWithImpl<$Res>
     Object? address = null,
     Object? openingTime = null,
     Object? closingTime = null,
+    Object? weeklyHours = null,
     Object? defaultServiceCost = null,
     Object? serviceRates = null,
     Object? partRates = null,
     Object? owner = freezed,
     Object? ownerName = freezed,
+    Object? ownerPhone = freezed,
     Object? createdAt = freezed,
   }) {
     return _then(
       _$GarageModelImpl(
-        id: null == id
-            ? _value.id
-            : id // ignore: cast_nullable_to_non_nullable
-                  as int,
+        id: null == id ? _value.id : id as int,
         garageName: null == garageName
             ? _value.garageName
-            : garageName // ignore: cast_nullable_to_non_nullable
-                  as String,
-        address: null == address
-            ? _value.address
-            : address // ignore: cast_nullable_to_non_nullable
-                  as String,
+            : garageName as String,
+        address: null == address ? _value.address : address as String,
         openingTime: null == openingTime
             ? _value.openingTime
-            : openingTime // ignore: cast_nullable_to_non_nullable
-                  as String,
+            : openingTime as String,
         closingTime: null == closingTime
             ? _value.closingTime
-            : closingTime // ignore: cast_nullable_to_non_nullable
-                  as String,
+            : closingTime as String,
+        weeklyHours: null == weeklyHours
+            ? _value._weeklyHours
+            : weeklyHours as Map<String, dynamic>,
         defaultServiceCost: null == defaultServiceCost
             ? _value.defaultServiceCost
-            : defaultServiceCost // ignore: cast_nullable_to_non_nullable
-                  as String,
+            : defaultServiceCost as String,
         serviceRates: null == serviceRates
             ? _value._serviceRates
-            : serviceRates // ignore: cast_nullable_to_non_nullable
-                  as Map<String, dynamic>,
+            : serviceRates as Map<String, dynamic>,
         partRates: null == partRates
             ? _value._partRates
-            : partRates // ignore: cast_nullable_to_non_nullable
-                  as Map<String, dynamic>,
-        owner: freezed == owner
-            ? _value.owner
-            : owner // ignore: cast_nullable_to_non_nullable
-                  as int?,
-        ownerName: freezed == ownerName
-            ? _value.ownerName
-            : ownerName // ignore: cast_nullable_to_non_nullable
-                  as String?,
-        createdAt: freezed == createdAt
-            ? _value.createdAt
-            : createdAt // ignore: cast_nullable_to_non_nullable
-                  as DateTime?,
+            : partRates as Map<String, dynamic>,
+        owner: freezed == owner ? _value.owner : owner as int?,
+        ownerName:
+            freezed == ownerName ? _value.ownerName : ownerName as String?,
+        ownerPhone:
+            freezed == ownerPhone ? _value.ownerPhone : ownerPhone as String?,
+        createdAt:
+            freezed == createdAt ? _value.createdAt : createdAt as DateTime?,
       ),
     );
   }
@@ -264,6 +243,8 @@ class _$GarageModelImpl extends _GarageModel {
     required this.address,
     @JsonKey(name: 'opening_time') required this.openingTime,
     @JsonKey(name: 'closing_time') required this.closingTime,
+    @JsonKey(name: 'weekly_hours', fromJson: _weeklyHoursFromJson)
+    final Map<String, dynamic> weeklyHours = const <String, dynamic>{},
     @JsonKey(name: 'default_service_cost', fromJson: _costFromJson)
     this.defaultServiceCost = '899.00',
     @JsonKey(name: 'service_rates')
@@ -272,8 +253,10 @@ class _$GarageModelImpl extends _GarageModel {
     final Map<String, dynamic> partRates = const <String, dynamic>{},
     this.owner,
     @JsonKey(name: 'owner_name') this.ownerName,
+    @JsonKey(name: 'owner_phone') this.ownerPhone,
     @JsonKey(name: 'created_at') this.createdAt,
-  }) : _serviceRates = serviceRates,
+  }) : _weeklyHours = weeklyHours,
+       _serviceRates = serviceRates,
        _partRates = partRates,
        super._();
 
@@ -293,6 +276,14 @@ class _$GarageModelImpl extends _GarageModel {
   @override
   @JsonKey(name: 'closing_time')
   final String closingTime;
+  final Map<String, dynamic> _weeklyHours;
+  @override
+  @JsonKey(name: 'weekly_hours', fromJson: _weeklyHoursFromJson)
+  Map<String, dynamic> get weeklyHours {
+    if (_weeklyHours is EqualUnmodifiableMapView) return _weeklyHours;
+    return EqualUnmodifiableMapView(_weeklyHours);
+  }
+
   @override
   @JsonKey(name: 'default_service_cost', fromJson: _costFromJson)
   final String defaultServiceCost;
@@ -301,7 +292,6 @@ class _$GarageModelImpl extends _GarageModel {
   @JsonKey(name: 'service_rates')
   Map<String, dynamic> get serviceRates {
     if (_serviceRates is EqualUnmodifiableMapView) return _serviceRates;
-    // ignore: implicit_dynamic_type
     return EqualUnmodifiableMapView(_serviceRates);
   }
 
@@ -310,7 +300,6 @@ class _$GarageModelImpl extends _GarageModel {
   @JsonKey(name: 'part_rates')
   Map<String, dynamic> get partRates {
     if (_partRates is EqualUnmodifiableMapView) return _partRates;
-    // ignore: implicit_dynamic_type
     return EqualUnmodifiableMapView(_partRates);
   }
 
@@ -320,12 +309,15 @@ class _$GarageModelImpl extends _GarageModel {
   @JsonKey(name: 'owner_name')
   final String? ownerName;
   @override
+  @JsonKey(name: 'owner_phone')
+  final String? ownerPhone;
+  @override
   @JsonKey(name: 'created_at')
   final DateTime? createdAt;
 
   @override
   String toString() {
-    return 'GarageModel(id: $id, garageName: $garageName, address: $address, openingTime: $openingTime, closingTime: $closingTime, defaultServiceCost: $defaultServiceCost, serviceRates: $serviceRates, partRates: $partRates, owner: $owner, ownerName: $ownerName, createdAt: $createdAt)';
+    return 'GarageModel(id: $id, garageName: $garageName, address: $address, openingTime: $openingTime, closingTime: $closingTime, weeklyHours: $weeklyHours, defaultServiceCost: $defaultServiceCost, serviceRates: $serviceRates, partRates: $partRates, owner: $owner, ownerName: $ownerName, ownerPhone: $ownerPhone, createdAt: $createdAt)';
   }
 
   @override
@@ -341,6 +333,10 @@ class _$GarageModelImpl extends _GarageModel {
                 other.openingTime == openingTime) &&
             (identical(other.closingTime, closingTime) ||
                 other.closingTime == closingTime) &&
+            const DeepCollectionEquality().equals(
+              other._weeklyHours,
+              _weeklyHours,
+            ) &&
             (identical(other.defaultServiceCost, defaultServiceCost) ||
                 other.defaultServiceCost == defaultServiceCost) &&
             const DeepCollectionEquality().equals(
@@ -354,6 +350,8 @@ class _$GarageModelImpl extends _GarageModel {
             (identical(other.owner, owner) || other.owner == owner) &&
             (identical(other.ownerName, ownerName) ||
                 other.ownerName == ownerName) &&
+            (identical(other.ownerPhone, ownerPhone) ||
+                other.ownerPhone == ownerPhone) &&
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt));
   }
@@ -367,16 +365,16 @@ class _$GarageModelImpl extends _GarageModel {
     address,
     openingTime,
     closingTime,
+    const DeepCollectionEquality().hash(_weeklyHours),
     defaultServiceCost,
     const DeepCollectionEquality().hash(_serviceRates),
     const DeepCollectionEquality().hash(_partRates),
     owner,
     ownerName,
+    ownerPhone,
     createdAt,
   );
 
-  /// Create a copy of GarageModel
-  /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
@@ -396,12 +394,15 @@ abstract class _GarageModel extends GarageModel {
     required final String address,
     @JsonKey(name: 'opening_time') required final String openingTime,
     @JsonKey(name: 'closing_time') required final String closingTime,
+    @JsonKey(name: 'weekly_hours', fromJson: _weeklyHoursFromJson)
+    final Map<String, dynamic> weeklyHours,
     @JsonKey(name: 'default_service_cost', fromJson: _costFromJson)
     final String defaultServiceCost,
     @JsonKey(name: 'service_rates') final Map<String, dynamic> serviceRates,
     @JsonKey(name: 'part_rates') final Map<String, dynamic> partRates,
     final int? owner,
     @JsonKey(name: 'owner_name') final String? ownerName,
+    @JsonKey(name: 'owner_phone') final String? ownerPhone,
     @JsonKey(name: 'created_at') final DateTime? createdAt,
   }) = _$GarageModelImpl;
   const _GarageModel._() : super._();
@@ -423,6 +424,9 @@ abstract class _GarageModel extends GarageModel {
   @JsonKey(name: 'closing_time')
   String get closingTime;
   @override
+  @JsonKey(name: 'weekly_hours', fromJson: _weeklyHoursFromJson)
+  Map<String, dynamic> get weeklyHours;
+  @override
   @JsonKey(name: 'default_service_cost', fromJson: _costFromJson)
   String get defaultServiceCost;
   @override
@@ -437,11 +441,12 @@ abstract class _GarageModel extends GarageModel {
   @JsonKey(name: 'owner_name')
   String? get ownerName;
   @override
+  @JsonKey(name: 'owner_phone')
+  String? get ownerPhone;
+  @override
   @JsonKey(name: 'created_at')
   DateTime? get createdAt;
 
-  /// Create a copy of GarageModel
-  /// with the given fields replaced by the non-null parameter values.
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
   _$$GarageModelImplCopyWith<_$GarageModelImpl> get copyWith =>

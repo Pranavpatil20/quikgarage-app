@@ -187,7 +187,7 @@ class _UpdateServiceScreenState extends ConsumerState<UpdateServiceScreen> {
             style: theme.textTheme.titleLarge,
           ),
           Text(
-            '${s.serviceType(widget.booking.serviceType)} · ${_vehicleType.toUpperCase()}',
+            '${s.serviceType(widget.booking.serviceType, vehicleType: _vehicleType)} · ${_vehicleType.toUpperCase()}',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),

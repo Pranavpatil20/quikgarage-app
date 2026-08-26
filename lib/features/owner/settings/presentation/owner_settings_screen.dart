@@ -35,6 +35,10 @@ class _OwnerSettingsScreenState extends ConsumerState<OwnerSettingsScreen> {
   final _serviceCostController = TextEditingController();
   TimeOfDay _opening = const TimeOfDay(hour: 9, minute: 0);
   TimeOfDay _closing = const TimeOfDay(hour: 18, minute: 0);
+  /// Per weekday: open flag + optional day-specific hours.
+  final Map<String, _DayAvailability> _weekly = {
+    for (final key in kWeekdayKeys) key: _DayAvailability(open: true),
+  };
   bool _saving = false;
   bool _savingProfile = false;
   bool _fieldsHydrated = false;
@@ -73,8 +77,51 @@ class _OwnerSettingsScreenState extends ConsumerState<OwnerSettingsScreen> {
     _opening = _parseTime(garage.openingTime);
     _closing = _parseTime(garage.closingTime);
     _serviceCostController.text = garage.displayServiceCost;
+    for (final key in kWeekdayKeys) {
+      final day = garage.weeklyHours[key];
+      if (day is Map) {
+        final open = day['open'];
+        final isOpen = open is bool
+            ? open
+            : !(open is String &&
+                (open.toLowerCase() == 'false' || open == '0'));
+        _weekly[key] = _DayAvailability(
+          open: isOpen,
+          opening: day['opening_time'] != null
+              ? _parseTime(day['opening_time'].toString())
+              : null,
+          closing: day['closing_time'] != null
+              ? _parseTime(day['closing_time'].toString())
+              : null,
+        );
+      } else {
+        _weekly[key] = _DayAvailability(open: true);
+      }
+    }
     _fieldsHydrated = true;
     _hydratedGarageId = garage.id;
+  }
+
+  Map<String, dynamic> _weeklyHoursPayload() {
+    final map = <String, dynamic>{};
+    for (final key in kWeekdayKeys) {
+      final day = _weekly[key]!;
+      if (!day.open) {
+        map[key] = {'open': false};
+        continue;
+      }
+      final entry = <String, dynamic>{'open': true};
+      final open = day.opening ?? _opening;
+      final close = day.closing ?? _closing;
+      // Only send day-specific times when they differ from garage defaults
+      // or when explicitly set.
+      if (day.opening != null || day.closing != null) {
+        entry['opening_time'] = _formatApiTime(open);
+        entry['closing_time'] = _formatApiTime(close);
+      }
+      map[key] = entry;
+    }
+    return map;
   }
 
   TimeOfDay _parseTime(String value) {
@@ -138,6 +185,7 @@ class _OwnerSettingsScreenState extends ConsumerState<OwnerSettingsScreen> {
         'address': address,
         'opening_time': _formatApiTime(_opening),
         'closing_time': _formatApiTime(_closing),
+        'weekly_hours': _weeklyHoursPayload(),
         'default_service_cost': cost,
       });
       _fieldsHydrated = false;
@@ -176,6 +224,7 @@ class _OwnerSettingsScreenState extends ConsumerState<OwnerSettingsScreen> {
         'address': address,
         'opening_time': _formatApiTime(_opening),
         'closing_time': _formatApiTime(_closing),
+        'weekly_hours': _weeklyHoursPayload(),
         'default_service_cost': cost,
       });
       _fieldsHydrated = false;
@@ -306,6 +355,9 @@ class _OwnerSettingsScreenState extends ConsumerState<OwnerSettingsScreen> {
       _serviceCostController.text = '899';
       _opening = const TimeOfDay(hour: 9, minute: 0);
       _closing = const TimeOfDay(hour: 20, minute: 0);
+      for (final key in kWeekdayKeys) {
+        _weekly[key] = _DayAvailability(open: true);
+      }
     }
 
     await showAppModalBottomSheet<void>(
@@ -391,6 +443,85 @@ class _OwnerSettingsScreenState extends ConsumerState<OwnerSettingsScreen> {
                         if (t != null) setSheetState(() => _closing = t);
                       },
                     ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Weekly availability',
+                      style: theme.textTheme.titleMedium,
+                    ),
+                    Text(
+                      'Turn off a day to block customer bookings. You can set different hours per day.',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ...kWeekdayKeys.map((key) {
+                      final day = _weekly[key]!;
+                      final openTime = day.opening ?? _opening;
+                      final closeTime = day.closing ?? _closing;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            SwitchListTile(
+                              contentPadding: EdgeInsets.zero,
+                              title: Text(kWeekdayLabels[key] ?? key),
+                              subtitle: Text(
+                                day.open
+                                    ? '${openTime.format(ctx)} – ${closeTime.format(ctx)}'
+                                    : 'Closed — customers cannot book',
+                              ),
+                              value: day.open,
+                              onChanged: (v) => setSheetState(() {
+                                _weekly[key] = day.copyWith(open: v);
+                              }),
+                            ),
+                            if (day.open)
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: TextButton(
+                                      onPressed: () async {
+                                        final t = await showTimePicker(
+                                          context: ctx,
+                                          initialTime: openTime,
+                                        );
+                                        if (t != null) {
+                                          setSheetState(() {
+                                            final current = _weekly[key]!;
+                                            _weekly[key] =
+                                                current.copyWith(opening: t);
+                                          });
+                                        }
+                                      },
+                                      child: Text('Open ${openTime.format(ctx)}'),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: TextButton(
+                                      onPressed: () async {
+                                        final t = await showTimePicker(
+                                          context: ctx,
+                                          initialTime: closeTime,
+                                        );
+                                        if (t != null) {
+                                          setSheetState(() {
+                                            final current = _weekly[key]!;
+                                            _weekly[key] =
+                                                current.copyWith(closing: t);
+                                          });
+                                        }
+                                      },
+                                      child: Text('Close ${closeTime.format(ctx)}'),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                          ],
+                        ),
+                      );
+                    }),
                     const SizedBox(height: 12),
                     ElevatedButton(
                       onPressed: _saving
@@ -852,6 +983,30 @@ class _OwnerSettingsScreenState extends ConsumerState<OwnerSettingsScreen> {
             ),
           ],
         ),
+    );
+  }
+}
+
+class _DayAvailability {
+  const _DayAvailability({
+    required this.open,
+    this.opening,
+    this.closing,
+  });
+
+  final bool open;
+  final TimeOfDay? opening;
+  final TimeOfDay? closing;
+
+  _DayAvailability copyWith({
+    bool? open,
+    TimeOfDay? opening,
+    TimeOfDay? closing,
+  }) {
+    return _DayAvailability(
+      open: open ?? this.open,
+      opening: opening ?? this.opening,
+      closing: closing ?? this.closing,
     );
   }
 }

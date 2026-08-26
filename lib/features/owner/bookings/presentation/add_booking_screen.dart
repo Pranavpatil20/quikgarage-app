@@ -41,21 +41,29 @@ class _AddBookingScreenState extends ConsumerState<AddBookingScreen> {
     super.dispose();
   }
 
-  TimeOfDay _openTime(GarageModel garage) =>
-      AppDateUtils.parseTimeOfDay(garage.openingTime) ??
-      const TimeOfDay(hour: 9, minute: 0);
+  TimeOfDay _openTime(GarageModel garage) {
+    final hours = garage.hoursForDate(_date);
+    final raw = hours?.opening ?? garage.openingTime;
+    return AppDateUtils.parseTimeOfDay(raw) ?? const TimeOfDay(hour: 9, minute: 0);
+  }
 
-  TimeOfDay _closeTime(GarageModel garage) =>
-      AppDateUtils.parseTimeOfDay(garage.closingTime) ??
-      const TimeOfDay(hour: 18, minute: 0);
+  TimeOfDay _closeTime(GarageModel garage) {
+    final hours = garage.hoursForDate(_date);
+    final raw = hours?.closing ?? garage.closingTime;
+    return AppDateUtils.parseTimeOfDay(raw) ?? const TimeOfDay(hour: 18, minute: 0);
+  }
 
   String _hoursMessage(GarageModel garage) {
+    if (!garage.isOpenOnDate(_date)) {
+      return 'Garage is closed on this day. Please choose another date.';
+    }
     final open = _openTime(garage);
     final close = _closeTime(garage);
     return 'Booking time must be between ${AppDateUtils.formatHoursRange(open, close)}.';
   }
 
   bool _isWithinHours(GarageModel garage, TimeOfDay time) {
+    if (!garage.isOpenOnDate(_date)) return false;
     return AppDateUtils.isWithinGarageHours(
       time,
       open: _openTime(garage),
@@ -68,13 +76,28 @@ class _AddBookingScreenState extends ConsumerState<AddBookingScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
+  DateTime _nextOpenDate(GarageModel garage, {DateTime? from}) {
+    var day = from ?? DateTime.now();
+    day = DateTime(day.year, day.month, day.day);
+    for (var i = 0; i < 90; i++) {
+      final candidate = day.add(Duration(days: i));
+      if (garage.isOpenOnDate(candidate)) return candidate;
+    }
+    return day;
+  }
+
   Future<void> _pickDate(GarageModel garage) async {
     final now = DateTime.now();
+    var initial = _date.isBefore(now) ? now : _date;
+    if (!garage.isOpenOnDate(initial)) {
+      initial = _nextOpenDate(garage, from: now);
+    }
     final picked = await showDatePicker(
       context: context,
-      initialDate: _date.isBefore(now) ? now : _date,
+      initialDate: initial,
       firstDate: DateTime(now.year, now.month, now.day),
       lastDate: now.add(const Duration(days: 90)),
+      selectableDayPredicate: garage.isOpenOnDate,
     );
     if (picked == null) return;
     setState(() {
@@ -110,6 +133,10 @@ class _AddBookingScreenState extends ConsumerState<AddBookingScreen> {
     }
     if (_selectedServiceTypes.isEmpty) {
       _showMessage('Select at least one service type');
+      return;
+    }
+    if (!garage.isOpenOnDate(_date)) {
+      _showMessage('Garage is closed on this day. Please choose another date.');
       return;
     }
     if (_isPastSelection) {

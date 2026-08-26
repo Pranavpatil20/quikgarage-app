@@ -101,11 +101,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       isScrollControlled: true,
       showDragHandle: true,
       builder: (ctx) => _AddVehicleSheet(
-        onSubmit: (number, model) {
+        onSubmit: (number, model, vehicleType) {
           return ref.read(vehicleRepositoryProvider).createVehicle({
             'vehicle_number': number,
             'make_model': model,
-            'vehicle_type': 'car',
+            'vehicle_type': vehicleType,
             'is_primary': true,
           });
         },
@@ -227,42 +227,38 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
-                      const SizedBox(height: 16),
-                      ElevatedButton.icon(
-                        onPressed: _showAddVehicleSheet,
-                        icon: const Icon(Icons.add),
-                        label: Text(s.addVehicle),
-                      ),
                     ],
                   ),
                 );
               }
               return Column(
-                children: [
-                  ...vehicles.map((v) {
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: GlassCard(
-                        child: ListTile(
-                          leading: Icon(Icons.directions_car, color: theme.colorScheme.primary),
-                          title: Text(v.displayName),
-                          subtitle: Text(v.vehicleNumber),
-                          trailing: v.isPrimary
-                              ? Chip(label: Text(s.primary, style: theme.textTheme.labelSmall))
-                              : null,
+                children: vehicles.map((v) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: GlassCard(
+                      child: ListTile(
+                        leading: Icon(
+                          v.vehicleType == 'bike'
+                              ? Icons.two_wheeler
+                              : Icons.directions_car,
+                          color: theme.colorScheme.primary,
                         ),
+                        title: Text(v.displayName),
+                        subtitle: Text(
+                          '${v.vehicleNumber} · ${v.vehicleType.toUpperCase()}',
+                        ),
+                        trailing: v.isPrimary
+                            ? Chip(
+                                label: Text(
+                                  s.primary,
+                                  style: theme.textTheme.labelSmall,
+                                ),
+                              )
+                            : null,
                       ),
-                    );
-                  }),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: TextButton.icon(
-                      onPressed: _showAddVehicleSheet,
-                      icon: const Icon(Icons.add),
-                      label: Text(s.addVehicle),
                     ),
-                  ),
-                ],
+                  );
+                }).toList(),
               );
             },
           ),
@@ -306,7 +302,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 class _AddVehicleSheet extends StatefulWidget {
   const _AddVehicleSheet({required this.onSubmit});
 
-  final Future<void> Function(String number, String model) onSubmit;
+  final Future<void> Function(String number, String model, String vehicleType)
+      onSubmit;
 
   @override
   State<_AddVehicleSheet> createState() => _AddVehicleSheetState();
@@ -315,6 +312,7 @@ class _AddVehicleSheet extends StatefulWidget {
 class _AddVehicleSheetState extends State<_AddVehicleSheet> {
   final _numberController = TextEditingController();
   final _modelController = TextEditingController();
+  String _vehicleType = 'bike';
   bool _saving = false;
 
   @override
@@ -336,7 +334,11 @@ class _AddVehicleSheetState extends State<_AddVehicleSheet> {
 
     setState(() => _saving = true);
     try {
-      await widget.onSubmit(number, _modelController.text.trim());
+      await widget.onSubmit(
+        number,
+        _modelController.text.trim(),
+        _vehicleType,
+      );
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
       if (mounted) {
@@ -366,7 +368,26 @@ class _AddVehicleSheetState extends State<_AddVehicleSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(s.addVehicle, style: theme.textTheme.titleLarge),
+            Text(s.addNew, style: theme.textTheme.titleLarge),
+            const SizedBox(height: 16),
+            Text('Vehicle type', style: theme.textTheme.titleSmall),
+            const SizedBox(height: 8),
+            SegmentedButton<String>(
+              segments: const [
+                ButtonSegment(
+                  value: 'bike',
+                  label: Text('Bike'),
+                  icon: Icon(Icons.two_wheeler),
+                ),
+                ButtonSegment(
+                  value: 'car',
+                  label: Text('Car'),
+                  icon: Icon(Icons.directions_car),
+                ),
+              ],
+              selected: {_vehicleType},
+              onSelectionChanged: (v) => setState(() => _vehicleType = v.first),
+            ),
             const SizedBox(height: 16),
             MicTextField(
               controller: _numberController,
@@ -381,7 +402,11 @@ class _AddVehicleSheetState extends State<_AddVehicleSheet> {
               controller: _modelController,
               decoration: InputDecoration(
                 labelText: s.makeModel,
-                prefixIcon: const Icon(Icons.directions_car),
+                prefixIcon: Icon(
+                  _vehicleType == 'bike'
+                      ? Icons.two_wheeler
+                      : Icons.directions_car,
+                ),
               ),
             ),
             const SizedBox(height: 20),
@@ -393,7 +418,7 @@ class _AddVehicleSheetState extends State<_AddVehicleSheet> {
                       width: 22,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : Text(s.addVehicle),
+                  : Text(s.addNew),
             ),
           ],
         ),

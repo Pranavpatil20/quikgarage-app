@@ -809,6 +809,11 @@ mixin _$AvailableSlotsResponse {
   @JsonKey(name: 'garage_id')
   int get garageId => throw _privateConstructorUsedError;
   String get date => throw _privateConstructorUsedError;
+  bool get closed => throw _privateConstructorUsedError;
+  @JsonKey(name: 'opening_time')
+  String? get openingTime => throw _privateConstructorUsedError;
+  @JsonKey(name: 'closing_time')
+  String? get closingTime => throw _privateConstructorUsedError;
   List<TimeSlotModel> get slots => throw _privateConstructorUsedError;
 
   /// Serializes this AvailableSlotsResponse to a JSON map.
@@ -831,6 +836,9 @@ abstract class $AvailableSlotsResponseCopyWith<$Res> {
   $Res call({
     @JsonKey(name: 'garage_id') int garageId,
     String date,
+    bool closed,
+    @JsonKey(name: 'opening_time') String? openingTime,
+    @JsonKey(name: 'closing_time') String? closingTime,
     List<TimeSlotModel> slots,
   });
 }
@@ -855,6 +863,9 @@ class _$AvailableSlotsResponseCopyWithImpl<
   $Res call({
     Object? garageId = null,
     Object? date = null,
+    Object? closed = null,
+    Object? openingTime = freezed,
+    Object? closingTime = freezed,
     Object? slots = null,
   }) {
     return _then(
@@ -867,6 +878,18 @@ class _$AvailableSlotsResponseCopyWithImpl<
                 ? _value.date
                 : date // ignore: cast_nullable_to_non_nullable
                       as String,
+            closed: null == closed
+                ? _value.closed
+                : closed // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            openingTime: freezed == openingTime
+                ? _value.openingTime
+                : openingTime // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            closingTime: freezed == closingTime
+                ? _value.closingTime
+                : closingTime // ignore: cast_nullable_to_non_nullable
+                      as String?,
             slots: null == slots
                 ? _value.slots
                 : slots // ignore: cast_nullable_to_non_nullable
@@ -889,6 +912,9 @@ abstract class _$$AvailableSlotsResponseImplCopyWith<$Res>
   $Res call({
     @JsonKey(name: 'garage_id') int garageId,
     String date,
+    bool closed,
+    @JsonKey(name: 'opening_time') String? openingTime,
+    @JsonKey(name: 'closing_time') String? closingTime,
     List<TimeSlotModel> slots,
   });
 }
@@ -910,6 +936,9 @@ class __$$AvailableSlotsResponseImplCopyWithImpl<$Res>
   $Res call({
     Object? garageId = null,
     Object? date = null,
+    Object? closed = null,
+    Object? openingTime = freezed,
+    Object? closingTime = freezed,
     Object? slots = null,
   }) {
     return _then(
@@ -922,6 +951,18 @@ class __$$AvailableSlotsResponseImplCopyWithImpl<$Res>
             ? _value.date
             : date // ignore: cast_nullable_to_non_nullable
                   as String,
+        closed: null == closed
+            ? _value.closed
+            : closed // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        openingTime: freezed == openingTime
+            ? _value.openingTime
+            : openingTime // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        closingTime: freezed == closingTime
+            ? _value.closingTime
+            : closingTime // ignore: cast_nullable_to_non_nullable
+                  as String?,
         slots: null == slots
             ? _value._slots
             : slots // ignore: cast_nullable_to_non_nullable
@@ -937,6 +978,9 @@ class _$AvailableSlotsResponseImpl implements _AvailableSlotsResponse {
   const _$AvailableSlotsResponseImpl({
     @JsonKey(name: 'garage_id') required this.garageId,
     required this.date,
+    this.closed = false,
+    @JsonKey(name: 'opening_time') this.openingTime,
+    @JsonKey(name: 'closing_time') this.closingTime,
     required final List<TimeSlotModel> slots,
   }) : _slots = slots;
 
@@ -948,6 +992,14 @@ class _$AvailableSlotsResponseImpl implements _AvailableSlotsResponse {
   final int garageId;
   @override
   final String date;
+  @override
+  final bool closed;
+  @override
+  @JsonKey(name: 'opening_time')
+  final String? openingTime;
+  @override
+  @JsonKey(name: 'closing_time')
+  final String? closingTime;
   final List<TimeSlotModel> _slots;
   @override
   List<TimeSlotModel> get slots {
@@ -958,7 +1010,7 @@ class _$AvailableSlotsResponseImpl implements _AvailableSlotsResponse {
 
   @override
   String toString() {
-    return 'AvailableSlotsResponse(garageId: $garageId, date: $date, slots: $slots)';
+    return 'AvailableSlotsResponse(garageId: $garageId, date: $date, closed: $closed, openingTime: $openingTime, closingTime: $closingTime, slots: $slots)';
   }
 
   @override
@@ -969,6 +1021,11 @@ class _$AvailableSlotsResponseImpl implements _AvailableSlotsResponse {
             (identical(other.garageId, garageId) ||
                 other.garageId == garageId) &&
             (identical(other.date, date) || other.date == date) &&
+            (identical(other.closed, closed) || other.closed == closed) &&
+            (identical(other.openingTime, openingTime) ||
+                other.openingTime == openingTime) &&
+            (identical(other.closingTime, closingTime) ||
+                other.closingTime == closingTime) &&
             const DeepCollectionEquality().equals(other._slots, _slots));
   }
 
@@ -978,6 +1035,9 @@ class _$AvailableSlotsResponseImpl implements _AvailableSlotsResponse {
     runtimeType,
     garageId,
     date,
+    closed,
+    openingTime,
+    closingTime,
     const DeepCollectionEquality().hash(_slots),
   );
 
@@ -1003,6 +1063,9 @@ abstract class _AvailableSlotsResponse implements AvailableSlotsResponse {
   const factory _AvailableSlotsResponse({
     @JsonKey(name: 'garage_id') required final int garageId,
     required final String date,
+    final bool closed,
+    @JsonKey(name: 'opening_time') final String? openingTime,
+    @JsonKey(name: 'closing_time') final String? closingTime,
     required final List<TimeSlotModel> slots,
   }) = _$AvailableSlotsResponseImpl;
 
@@ -1014,6 +1077,14 @@ abstract class _AvailableSlotsResponse implements AvailableSlotsResponse {
   int get garageId;
   @override
   String get date;
+  @override
+  bool get closed;
+  @override
+  @JsonKey(name: 'opening_time')
+  String? get openingTime;
+  @override
+  @JsonKey(name: 'closing_time')
+  String? get closingTime;
   @override
   List<TimeSlotModel> get slots;
 

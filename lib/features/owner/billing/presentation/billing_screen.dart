@@ -299,7 +299,10 @@ class _InvoiceCard extends StatelessWidget {
           if (booking != null) ...[
             const SizedBox(height: 4),
             Text(
-              '${s.serviceCost}: ${s.serviceType(booking.serviceType)}',
+              '${s.serviceCost}: ${s.serviceType(
+                booking.serviceType,
+                vehicleType: booking.vehicleDetail?.vehicleType,
+              )}',
               style: theme.textTheme.labelSmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),

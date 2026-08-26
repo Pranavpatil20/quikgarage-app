@@ -73,6 +73,7 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
                     final booking = filtered[index];
                     return BookingCard(
                       booking: booking,
+                      showGarageDetails: true,
                       trailing: booking.canCancel
                           ? TextButton(
                               onPressed: () => _cancel(booking.id),

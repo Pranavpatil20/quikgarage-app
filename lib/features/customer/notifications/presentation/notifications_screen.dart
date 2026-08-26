@@ -50,6 +50,7 @@ class NotificationsScreen extends ConsumerWidget {
           if (notifications.isEmpty) {
             return Center(child: Text(s.noNotifications));
           }
+          final isDark = theme.brightness == Brightness.dark;
           return ListView.separated(
             padding: EdgeInsets.fromLTRB(
               16,
@@ -61,9 +62,20 @@ class NotificationsScreen extends ConsumerWidget {
             separatorBuilder: (_, _) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final n = notifications[index];
+              final unread = !n.readStatus;
+              final scheme = theme.colorScheme;
+              final cardColor = unread
+                  ? scheme.primaryContainer.withValues(alpha: isDark ? 0.45 : 0.55)
+                  : scheme.surfaceContainerHighest.withValues(alpha: isDark ? 0.35 : 0.65);
+              final border = unread
+                  ? scheme.primary.withValues(alpha: 0.55)
+                  : scheme.outlineVariant.withValues(alpha: 0.7);
+
               return GlassCard(
+                color: cardColor,
+                borderColor: border,
                 onTap: () async {
-                  if (!n.readStatus) {
+                  if (unread) {
                     await ref.read(notificationRepositoryProvider).markRead(n.id);
                     ref.invalidate(notificationsProvider);
                   }
@@ -72,14 +84,12 @@ class NotificationsScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
-                      width: 8,
-                      height: 8,
-                      margin: const EdgeInsets.only(top: 8),
+                      width: 10,
+                      height: 10,
+                      margin: const EdgeInsets.only(top: 6),
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: n.readStatus
-                            ? Colors.transparent
-                            : theme.colorScheme.primary,
+                        color: unread ? scheme.primary : scheme.outlineVariant,
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -87,9 +97,49 @@ class NotificationsScreen extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(n.title, style: theme.textTheme.titleLarge),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  n.title,
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight:
+                                        unread ? FontWeight.w700 : FontWeight.w500,
+                                    color: unread
+                                        ? scheme.onPrimaryContainer
+                                        : scheme.onSurface.withValues(alpha: 0.75),
+                                  ),
+                                ),
+                              ),
+                              if (unread)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: scheme.primary,
+                                    borderRadius: BorderRadius.circular(999),
+                                  ),
+                                  child: Text(
+                                    'New',
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: scheme.onPrimary,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
                           const SizedBox(height: 4),
-                          Text(n.message, style: theme.textTheme.bodyMedium),
+                          Text(
+                            n.message,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: unread
+                                  ? scheme.onSurface
+                                  : scheme.onSurfaceVariant,
+                            ),
+                          ),
                         ],
                       ),
                     ),

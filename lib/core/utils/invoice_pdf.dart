@@ -118,7 +118,10 @@ abstract final class InvoicePdfBuilder {
                   : '${vehicle.displayName}  ${vehicle.vehicleNumber}',
             ),
             if (booking != null)
-              _kv('Service', s.serviceType(booking.serviceType)),
+              _kv('Service', s.serviceType(
+                booking.serviceType,
+                vehicleType: vehicle?.vehicleType,
+              )),
             _kv('Schedule', schedule),
             if (booking != null)
               _kv('Booking status', s.bookingStatus(booking.status)),
@@ -145,11 +148,11 @@ abstract final class InvoicePdfBuilder {
               child: pw.Column(
                 crossAxisAlignment: pw.CrossAxisAlignment.end,
                 children: [
-                  pw.Text('Labour / Service: ₹${invoice.serviceCost}'),
-                  pw.Text('Parts / Lubricant: ₹${invoice.partsCost}'),
+                  pw.Text('Labour / Service: Rs.${invoice.serviceCost}'),
+                  pw.Text('Parts / Lubricant: Rs.${invoice.partsCost}'),
                   pw.SizedBox(height: 4),
                   pw.Text(
-                    '${s.total}: ₹${invoice.totalAmount}',
+                    '${s.total}: Rs.${invoice.totalAmount}',
                     style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 13),
                   ),
                 ],

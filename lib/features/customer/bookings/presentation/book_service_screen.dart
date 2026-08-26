@@ -99,6 +99,24 @@ class _BookServiceScreenState extends ConsumerState<BookServiceScreen> {
     );
   }
 
+  GarageModel? _selectedGarage(List<GarageModel> garages) {
+    if (_selectedGarageId == null) return null;
+    for (final g in garages) {
+      if (g.id == _selectedGarageId) return g;
+    }
+    return null;
+  }
+
+  DateTime _nextOpenDate(GarageModel garage, {DateTime? from}) {
+    var day = from ?? DateTime.now();
+    day = DateTime(day.year, day.month, day.day);
+    for (var i = 0; i < 90; i++) {
+      final candidate = day.add(Duration(days: i));
+      if (garage.isOpenOnDate(candidate)) return candidate;
+    }
+    return day;
+  }
+
   Future<void> _book() async {
     final s = AppStrings.of(context);
     final error = _validationMessage(s);
@@ -112,6 +130,8 @@ class _BookServiceScreenState extends ConsumerState<BookServiceScreen> {
       );
       return;
     }
+    final garages = ref.read(garagesProvider).valueOrNull ?? [];
+    final garage = _selectedGarage(garages);
     setState(() => _loading = true);
     try {
       await ref.read(bookingRepositoryProvider).createBooking({
@@ -124,10 +144,38 @@ class _BookServiceScreenState extends ConsumerState<BookServiceScreen> {
       });
       refreshBookings(ref);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(s.bookingConfirmed)),
+        await showAppDialog<void>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: Text(s.bookingConfirmed),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  garage?.garageName ?? 'Garage',
+                  style: Theme.of(ctx).textTheme.titleMedium,
+                ),
+                if (garage != null && garage.address.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text(garage.address),
+                ],
+                if (garage?.ownerPhone != null &&
+                    garage!.ownerPhone!.trim().isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text('Owner phone: ${garage.ownerPhone}'),
+                ],
+              ],
+            ),
+            actions: [
+              FilledButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
         );
-        context.go('/customer');
+        if (mounted) context.go('/customer/bookings');
       }
     } catch (e) {
       if (mounted) {
@@ -214,7 +262,16 @@ class _BookServiceScreenState extends ConsumerState<BookServiceScreen> {
                       final v = vehicles[i];
                       final selected = _selectedVehicleId == v.id;
                       return GestureDetector(
-                        onTap: () => setState(() => _selectedVehicleId = v.id),
+                        onTap: () => setState(() {
+                          _selectedVehicleId = v.id;
+                          final allowed =
+                              AppConstants.serviceTypesForVehicle(v.vehicleType);
+                          _selectedServiceTypes
+                              .removeWhere((t) => !allowed.contains(t));
+                          if (_selectedServiceTypes.isEmpty) {
+                            _selectedServiceTypes.add('general_service');
+                          }
+                        }),
                         child: Container(
                           width: 200,
                           padding: const EdgeInsets.all(16),
@@ -289,6 +346,9 @@ class _BookServiceScreenState extends ConsumerState<BookServiceScreen> {
                         onTap: () => setState(() {
                           _selectedGarageId = g.id;
                           _selectedSlot = null;
+                          if (!g.isOpenOnDate(_selectedDate)) {
+                            _selectedDate = _nextOpenDate(g);
+                          }
                         }),
                         child: Row(
                           children: [
@@ -337,16 +397,10 @@ class _BookServiceScreenState extends ConsumerState<BookServiceScreen> {
             Builder(
               builder: (context) {
                 final vehicles = ref.watch(vehiclesProvider).valueOrNull ?? [];
-                final selectedVehicle = vehicles
-                    .where((v) => v.id == _selectedVehicleId)
-                    .firstOrNull;
-                final vehicleType = selectedVehicle?.vehicleType ?? 'bike';
+                final matched = vehicles.where((v) => v.id == _selectedVehicleId);
+                final vehicleType =
+                    matched.isEmpty ? 'bike' : matched.first.vehicleType;
                 final types = AppConstants.serviceTypesForVehicle(vehicleType);
-                // Drop selections that don't apply to this vehicle.
-                _selectedServiceTypes.removeWhere((t) => !types.contains(t));
-                if (_selectedServiceTypes.isEmpty) {
-                  _selectedServiceTypes.add('general_service');
-                }
                 return Wrap(
                   spacing: 8,
                   runSpacing: 8,
@@ -379,11 +433,20 @@ class _BookServiceScreenState extends ConsumerState<BookServiceScreen> {
               trailing: const Icon(Icons.calendar_today),
               onTap: () async {
                 final now = DateTime.now();
+                final garages = garagesAsync.valueOrNull ?? [];
+                final garage = _selectedGarage(garages);
+                var initial = _selectedDate.isBefore(now) ? now : _selectedDate;
+                if (garage != null && !garage.isOpenOnDate(initial)) {
+                  initial = _nextOpenDate(garage, from: now);
+                }
                 final picked = await showDatePicker(
                   context: context,
-                  initialDate: _selectedDate.isBefore(now) ? now : _selectedDate,
+                  initialDate: initial,
                   firstDate: DateTime(now.year, now.month, now.day),
                   lastDate: now.add(const Duration(days: 60)),
+                  selectableDayPredicate: garage == null
+                      ? null
+                      : (day) => garage.isOpenOnDate(day),
                 );
                 if (picked != null) {
                   setState(() {
@@ -408,6 +471,14 @@ class _BookServiceScreenState extends ConsumerState<BookServiceScreen> {
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (e, _) => Text(e.toString()),
                 data: (slots) {
+                  if (slots.closed) {
+                    return GlassCard(
+                      child: Text(
+                        'Garage is closed on this day. Please choose another date.',
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                    );
+                  }
                   final visible = slots.slots.where((slot) {
                     // Keep past slots out of the picker for today.
                     return !_isSlotInPast(slot.time);
@@ -415,25 +486,40 @@ class _BookServiceScreenState extends ConsumerState<BookServiceScreen> {
                   if (visible.isEmpty) {
                     return Text(s.noSlotsForDate);
                   }
-                  return Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: visible.map((slot) {
-                      final selected = _selectedSlot == slot.time;
-                      return FilterChip(
-                        label: Text(
-                          AppDateUtils.formatTime(slot.time, locale: locale),
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (slots.openingTime != null && slots.closingTime != null)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Text(
+                            'Hours: ${AppDateUtils.formatTime(slots.openingTime!, locale: locale)} – ${AppDateUtils.formatTime(slots.closingTime!, locale: locale)}',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
                         ),
-                        selected: selected,
-                        onSelected: slot.available
-                            ? (_) => setState(() => _selectedSlot = slot.time)
-                            : null,
-                        showCheckmark: false,
-                        avatar: !slot.available
-                            ? const Icon(Icons.block, size: 16)
-                            : null,
-                      );
-                    }).toList(),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: visible.map((slot) {
+                          final selected = _selectedSlot == slot.time;
+                          return FilterChip(
+                            label: Text(
+                              AppDateUtils.formatTime(slot.time, locale: locale),
+                            ),
+                            selected: selected,
+                            onSelected: slot.available
+                                ? (_) => setState(() => _selectedSlot = slot.time)
+                                : null,
+                            showCheckmark: false,
+                            avatar: !slot.available
+                                ? const Icon(Icons.block, size: 16)
+                                : null,
+                          );
+                        }).toList(),
+                      ),
+                    ],
                   );
                 },
               ),

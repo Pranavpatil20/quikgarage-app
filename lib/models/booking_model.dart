@@ -50,6 +50,9 @@ class AvailableSlotsResponse with _$AvailableSlotsResponse {
   const factory AvailableSlotsResponse({
     @JsonKey(name: 'garage_id') required int garageId,
     required String date,
+    @Default(false) bool closed,
+    @JsonKey(name: 'opening_time') String? openingTime,
+    @JsonKey(name: 'closing_time') String? closingTime,
     required List<TimeSlotModel> slots,
   }) = _AvailableSlotsResponse;
 

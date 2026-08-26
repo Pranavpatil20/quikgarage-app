@@ -6,15 +6,26 @@ class GlassCard extends StatelessWidget {
     required this.child,
     this.padding = const EdgeInsets.all(16),
     this.onTap,
+    this.color,
+    this.borderColor,
   });
 
   final Widget child;
   final EdgeInsetsGeometry padding;
   final VoidCallback? onTap;
+  final Color? color;
+  final Color? borderColor;
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final bg = color ??
+        (isDark
+            ? theme.colorScheme.surface.withValues(alpha: 0.9)
+            : Colors.white.withValues(alpha: 0.85));
+    final border = borderColor ?? theme.colorScheme.outlineVariant;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -23,13 +34,9 @@ class GlassCard extends StatelessWidget {
         child: Container(
           padding: padding,
           decoration: BoxDecoration(
-            color: isDark
-                ? Theme.of(context).colorScheme.surface.withValues(alpha: 0.9)
-                : Colors.white.withValues(alpha: 0.85),
+            color: bg,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: Theme.of(context).colorScheme.outlineVariant,
-            ),
+            border: Border.all(color: border),
             boxShadow: isDark
                 ? null
                 : [
